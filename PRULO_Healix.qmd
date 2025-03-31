@@ -1,0 +1,290 @@
+---
+title: "Clinical outcome of Healix Advance BR (Biocryl Rapide)"
+author: "Corey Scholes"
+affiliation: "EBM Analytics"
+version: 3.0
+type: "website"
+number-sections: true
+number-depth: 3
+date: "2023-Aug-21"
+date-modified: "2025-Mar-31"
+bibliography: HealixBR references.bib
+editor: visual
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+  docx: 
+    toc: true
+    number-sections: true
+    toc-depth: 2
+  html:
+    toc: true
+    number-sections: true
+    code-fold: true
+    
+execute: 
+  echo: true
+  warning: false
+  message: false
+---
+
+# Introduction
+
+This analysis links to the [manuscript](https://docs.google.com/document/d/17DEfS8ajGfhUK3nA8isyMKK4Vxrus6sMGkJ-5cSPQhk/edit?usp=sharing "Link to Healix manuscript draft") of the Healix BR product as one of two companion publications assessing new-to-market hardware. The dataset is derived from the PRULO registry snapshot and live tables. A protocol has been previously prepared for the registry [@scholes2023].
+
+## Reporting
+
+The study was reported according to the RECORD guidelines [@Benchimol2015] and companion checklist.
+
+The analysis was conducted in RStudio IDE (RStudio 2024.12.0+467 "Kousa Dogwood" Release) using *Rbase* [@base], *quarto* [@quarto] and attached packages to perform the following;
+
+-   Data import and preparation
+
+-   Sample selection
+
+-   Describe and address missingness
+
+-   Data manipulation, modelling and visualisation of;
+
+    -   Patient characteristics
+
+    -   Pathology characteristics (diagnosis)
+
+    -   Management and surgical technique
+
+    -   Treatment and repair survival
+
+    -   Adverse events and complications
+
+    -   Patient reported outcomes
+
+-   Publish to posit connect for dissemination
+
+## Preparation
+
+Packages were loaded initially with *pacman* package (v`{r} utils::packageVersion("pacman")`) [@pacman] Citations are applied to each library at first use in the text. <!--# Reorder these in order of general appearance -->
+
+```{r}
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(
+  "knitr",
+  "cardx",
+  "quarto",
+  "forcats",
+  "gargle",
+  "googledrive",
+  "googlesheets4",
+  "openxlsx2",
+  "tidyverse",
+  "tidymodels",
+  "tictoc",
+  "lubridate",
+  "gt",
+  "consort",
+  "gtsummary",
+  "survival",
+  "ggplot2",
+  "ggdist",
+  "ggsurvfit",
+  "ggfortify",
+  "mice",
+  "marginaleffects",
+  "patchwork",
+  "naniar",
+  "quantreg",
+  "broom",
+  "epoxy",
+  "broom.mixed",
+  "lme4",
+  "stringr"
+  )
+  
+  
+```
+
+## Authorisations
+
+Access to PRULO datasets was pre-authorised using the *gargle* package (v`{r} utils::packageVersion("gargle")`) [@gargle].
+
+```{r, echo = FALSE}
+
+# Set the cache location
+options(gargle_oauth_cache = ".secrets")
+
+# Use the saved token for non-interactive auth
+googledrive::drive_auth(
+  email = "cscholes@ebma.com.au", 
+  cache = ".secrets"
+  )
+```
+
+```{r, echo = FALSE}
+
+options(
+  gargle_oauth_cache = ".secrets",
+  gargle_oauth_email = TRUE
+)
+
+drive_auth(cache = ".secrets", email = TRUE)
+```
+
+## Functions for Processing
+
+<!--# Need to update this section to hard retrieve snapshot used in original analysis (mar-2024) -->
+
+Include a series of functions to call later in the file for processing data imports.
+
+Function to retrieve files, using *googledrive* package(v`{r} utils::packageVersion("googledrive")`) [@googledrive].
+
+```{r, echo = FALSE}
+
+base_folder_id1 <- "1og1hWKEXFcy8v8pLSzA_Ii767bbCe_EK"
+
+```
+
+```{r}
+get_specific_snapshot <- function(folder_name, base_folder_id = base_folder_id1) {
+  tryCatch({
+    # Check if the folder exists in the base directory
+    folder <- googledrive::drive_ls(as_id(base_folder_id), pattern = paste0("^", folder_name, "$"))
+    
+    if(nrow(folder) == 0) {
+      stop(paste("Folder", folder_name, "not found"))
+    }
+    
+    # Find the snapshot file in the specified folder
+    snapshot_file <- googledrive::drive_ls(
+      folder$id, 
+      pattern = "Registry data snapshot\\.xlsx$"
+    )
+    
+    if(nrow(snapshot_file) == 0) {
+      stop("No snapshot file found in specified folder")
+    }
+    
+    # Return both pieces of information as a list
+    return(list(
+      snapshot = snapshot_file,
+      folder_name = folder$name
+    ))
+    
+  }, error = function(e) {
+    stop(paste("Error finding specified snapshot:", e$message))
+  })
+}
+```
+
+## Analysis Aim
+
+To describe the clinical and patient-reported outcomes, in patients presenting for surgical review of shoulder pathology and electing to undergo reconstruction or repair of soft-tissue structures with a biodegradable anchor (Healix Advance BR, Depuy-Mitek, USA), at a private, regional orthopaedic clinic between 2020 - 2024.
+
+## Analysis Hypotheses
+
+It was hypothesised that i) a low incidence of adverse events would be observed and ii) that significant improvements in general function (QuickDASH) and pathology-specific (WORC) outcomes would be observed at up to 12months follow up.
+
+# Methods
+
+### RECORD \[4\] - Study Design
+
+Subgroup analysis of a clinical registry embedded into private practice. Observational, cohort design.
+
+## Data Import and Preparation
+
+Data was retrieved and formatted using *openxlsx* [@openxlsx2] to retrieve static snapshot files and *googlesheets4* (v`{r} utils::packageVersion("googlesheets4")`) [@googlesheets4] to retrieve live database tables. Text and code output were integrated using the *epoxy* package (v`{r} utils::packageVersion("epoxy")`) [@epoxy].
+
+Source files were specified and stored as global variables to call on in further functions.
+
+```{r, Live Table IDs, echo = FALSE}
+
+SheetIDs <- list(
+DbSS = "https://docs.google.com/spreadsheets/d/1zyFuf0Wmij13ELTYNmdi_BprF8hU4QSCPsNZ0EYRXzo/edit",
+ImplantSS = "https://docs.google.com/spreadsheets/d/1MvT00sc8FzH5SXEi-yzEgW1H1ao3AOoakKqpg7UkxW4/edit",
+AcctSS ="https://docs.google.com/spreadsheets/d/1zyFuf0Wmij13ELTYNmdi_BprF8hU4QSCPsNZ0EYRXzo/edit"
+)
+
+
+
+```
+
+
+
+```{r, Read in Live Tables}
+
+# Authenticate for sheets using the same token
+gs4_auth(token = drive_token())
+
+
+
+ComplicTable <- googlesheets4::read_sheet(
+  ss = SheetIDs$DbSS,
+  sheet = "Complications", 
+  col_names = TRUE, 
+  col_types = "tcccDccD"
+  )
+
+ImplantTable <- googlesheets4::range_read(
+  ss = SheetIDs$ImplantSS,
+  sheet = "Healix", 
+  range = "F1:I",
+  col_names = TRUE, 
+  col_types = "nccc"
+  )
+
+AcctData <- googlesheets4::range_read(
+  ss = SheetIDs$AcctSS,
+  sheet = "AcctType2015", 
+  range = "A1:G",
+  col_names = TRUE, 
+  col_types = "ccccDcc"
+  )
+
+#To match to acctData
+PatientTable <- range_read(
+  ss = SheetIDs$DbSS,
+  sheet = "Patient", 
+  range = "A10:N",
+  col_names = FALSE, 
+  col_types = "DccccDcccDcicc"
+  )
+
+
+Patient_Col <- c(
+  "PatientCreationDate",
+  "PatientID",
+  "LastName",	
+  "FirstName",	
+  "AlternateID",	
+  "DateOfBirth",	
+  "Sex",	
+  "RegistryStatus",	
+  "RegistryStatusNotes",	
+  "DateRegistryStatus",	
+  "NotificationMethod",	
+  "NoTreatmentRecords",	
+  "Email",	
+  "Phone"
+)
+
+colnames(PatientTable) <- Patient_Col
+
+
+```
+
+Read in PRULO snapshot file using *openxlsx* (v`{r} utils::packageVersion(pkg = "openxlsx2")`) [@openxlsx2] and *googledrive* (v`{r} utils::packageVersion(pkg = "googledrive")`) [@googledrive].
+
+```{r}
+
+# Authenticate for sheets using the same token
+gs4_auth(token = drive_token())
+
+# To get a snapshot from a specific folder (e.g., "20230415")
+specific_snapshot <- get_specific_snapshot("20240331")
+
+
+```
+
+
+

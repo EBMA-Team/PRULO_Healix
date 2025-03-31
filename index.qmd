@@ -1,0 +1,69 @@
+---
+title: "Clinical outcome of Healix Advance BR (Biocryl Rapide)"
+author: "Corey Scholes"
+affiliation: "EBM Analytics"
+version: 3.0
+type: "website"
+number-sections: true
+number-depth: 3
+date: "2023-Aug-21"
+date-modified: "2025-Mar-31"
+bibliography: HealixBR references.bib
+editor: visual
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+  docx: 
+    toc: true
+    number-sections: true
+    toc-depth: 2
+  html:
+    toc: true
+    number-sections: true
+    code-fold: true
+    
+execute: 
+  echo: true
+  warning: false
+  message: false
+---
+
+# Introduction
+
+This analysis links to the [manuscript](https://docs.google.com/document/d/17DEfS8ajGfhUK3nA8isyMKK4Vxrus6sMGkJ-5cSPQhk/edit?usp=sharing "Link to Healix manuscript draft") of the Healix BR product as one of two companion publications assessing new-to-market hardware. The dataset is derived from the PRULO registry snapshot and live tables. A protocol has been previously prepared for the registry [@scholes2023].
+
+## Reporting
+
+The study was reported according to the RECORD guidelines [@Benchimol2015] and companion checklist.
+
+The analysis was conducted in RStudio IDE (RStudio 2024.12.0+467 "Kousa Dogwood" Release) using *Rbase* [@base], *quarto* [@quarto] and attached packages to perform the following;
+
+-   Data import and preparation
+
+-   Sample selection
+
+-   Describe and address missingness
+
+-   Data manipulation, modelling and visualisation of;
+
+    -   Patient characteristics
+
+    -   Pathology characteristics (diagnosis)
+
+    -   Management and surgical technique
+
+    -   Treatment and repair survival
+
+    -   Adverse events and complications
+
+    -   Patient reported outcomes
+
+-   Publish to posit connect for dissemination
+
+## Preparation
+
+Load up required packages in advance. Citations are applied to each library at first use in the text. <!--# Reorder these in order of general appearance -->
+
+
