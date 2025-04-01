@@ -1,5 +1,5 @@
 ---
-title: "Clinical outcome of Healix Advance BR (Biocryl Rapide)"
+title: "Stage 2a IDEAL evaluation of a third-generation biocomposite suture anchor in arthroscopic rotator cuff repair: Supplementary analysis report"
 author: "Corey Scholes"
 affiliation: "EBM Analytics"
 version: 3.0
@@ -8,7 +8,9 @@ number-sections: true
 number-depth: 3
 date: "2023-Aug-21"
 date-modified: "2025-Mar-31"
-bibliography: HealixBR references.bib
+bibliography: 
+- HealixBR references.bib
+- grateful-refs.bib
 editor: visual
 format:
   pdf:
@@ -32,7 +34,7 @@ execute:
 
 # Introduction
 
-This analysis links to the [manuscript](https://docs.google.com/document/d/17DEfS8ajGfhUK3nA8isyMKK4Vxrus6sMGkJ-5cSPQhk/edit?usp=sharing "Link to Healix manuscript draft") of the Healix BR product as one of two companion publications assessing new-to-market hardware. The dataset is derived from the PRULO registry snapshot and live tables. A protocol has been previously prepared for the registry [@scholes2023].
+This analysis links to the [manuscript](https://doi.org/10.1101/2024.06.13.24307996) of the Healix BR product. The dataset is derived from the PRULO registry snapshot and live tables. A protocol has been previously prepared for the registry [@scholes2023].
 
 ## Reporting
 
@@ -64,12 +66,17 @@ The analysis was conducted in RStudio IDE (RStudio 2024.12.0+467 "Kousa Dogwood"
 
 ## Preparation
 
-Packages were loaded initially with *pacman* package (v`{r} utils::packageVersion("pacman")`) [@pacman] Citations are applied to each library at first use in the text. <!--# Reorder these in order of general appearance -->
+Packages were loaded initially with *pacman* package (v`{r} utils::packageVersion("pacman")`) [@pacman] Citations were applied to each library at first use in the text. <!--# Reorder these in order of general appearance -->
 
 ```{r}
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
+  "litedown",
+  "grateful",
+  "modelsummary",
+  "quantreg",
+  "readr",
   "knitr",
   "cardx",
   "quarto",
@@ -80,7 +87,6 @@ pacman::p_load(
   "openxlsx2",
   "tidyverse",
   "tidymodels",
-  "tictoc",
   "lubridate",
   "gt",
   "consort",
@@ -88,7 +94,6 @@ pacman::p_load(
   "survival",
   "ggplot2",
   "ggdist",
-  "ggsurvfit",
   "ggfortify",
   "mice",
   "marginaleffects",
@@ -105,9 +110,20 @@ pacman::p_load(
   
 ```
 
+```{r}
+
+pkgs <- grateful::cite_packages(
+  dependencies = TRUE,
+  output = "table", 
+  out.dir = "."
+  )
+knitr::kable(pkgs)
+
+```
+
 ## Authorisations
 
-Access to PRULO datasets was pre-authorised using the *gargle* package (v`{r} utils::packageVersion("gargle")`) [@gargle].
+Access to PRULO datasets was pre-authorised using the *gargle* package (v`{r} utils::packageVersion("gargle")`) [@gargle] and *googledrive* (v`{r} utils::packageVersion("googledrive")`) [@googledrive].
 
 ```{r, echo = FALSE}
 
@@ -133,11 +149,7 @@ drive_auth(cache = ".secrets", email = TRUE)
 
 ## Functions for Processing
 
-<!--# Need to update this section to hard retrieve snapshot used in original analysis (mar-2024) -->
-
-Include a series of functions to call later in the file for processing data imports.
-
-Function to retrieve files, using *googledrive* package(v`{r} utils::packageVersion("googledrive")`) [@googledrive].
+A function was generated to retrieve files using the *googledrive* package, to call on later in the analysis for processing data imports.
 
 ```{r, echo = FALSE}
 
@@ -193,23 +205,20 @@ Subgroup analysis of a clinical registry embedded into private practice. Observa
 
 ## Data Import and Preparation
 
-Data was retrieved and formatted using *openxlsx* [@openxlsx2] to retrieve static snapshot files and *googlesheets4* (v`{r} utils::packageVersion("googlesheets4")`) [@googlesheets4] to retrieve live database tables. Text and code output were integrated using the *epoxy* package (v`{r} utils::packageVersion("epoxy")`) [@epoxy].
-
-Source files were specified and stored as global variables to call on in further functions.
+Data was retrieved using *googlesheets4* (v`{r} utils::packageVersion("googlesheets4")`) [@googlesheets4] to retrieve live database tables. Source files were specified and stored as global variables to call on in further functions.
 
 ```{r, Live Table IDs, echo = FALSE}
 
 SheetIDs <- list(
 DbSS = "https://docs.google.com/spreadsheets/d/1zyFuf0Wmij13ELTYNmdi_BprF8hU4QSCPsNZ0EYRXzo/edit",
 ImplantSS = "https://docs.google.com/spreadsheets/d/1MvT00sc8FzH5SXEi-yzEgW1H1ao3AOoakKqpg7UkxW4/edit",
-AcctSS ="https://docs.google.com/spreadsheets/d/1zyFuf0Wmij13ELTYNmdi_BprF8hU4QSCPsNZ0EYRXzo/edit"
+#AcctSS ="https://docs.google.com/spreadsheets/d/1zyFuf0Wmij13ELTYNmdi_BprF8hU4QSCPsNZ0EYRXzo/edit",
+SurgicalGapSS = "https://docs.google.com/spreadsheets/d/1qVGc27EEevETq3OvJsJ0UUMKhPG07H7J209ZCHN8Ww8/edit"
 )
 
 
 
 ```
-
-
 
 ```{r, Read in Live Tables}
 
@@ -233,16 +242,16 @@ ImplantTable <- googlesheets4::range_read(
   col_types = "nccc"
   )
 
-AcctData <- googlesheets4::range_read(
-  ss = SheetIDs$AcctSS,
-  sheet = "AcctType2015", 
-  range = "A1:G",
-  col_names = TRUE, 
-  col_types = "ccccDcc"
-  )
+# AcctData <- googlesheets4::range_read(
+#   ss = SheetIDs$AcctSS,
+#   sheet = "AcctType2015", 
+#   range = "A1:G",
+#   col_names = TRUE, 
+#   col_types = "ccccDcc"
+#   )
 
 #To match to acctData
-PatientTable <- range_read(
+PatientTable <- googlesheets4::range_read(
   ss = SheetIDs$DbSS,
   sheet = "Patient", 
   range = "A10:N",
@@ -273,7 +282,7 @@ colnames(PatientTable) <- Patient_Col
 
 ```
 
-Read in PRULO snapshot file using *openxlsx* (v`{r} utils::packageVersion(pkg = "openxlsx2")`) [@openxlsx2] and *googledrive* (v`{r} utils::packageVersion(pkg = "googledrive")`) [@googledrive].
+A static registry snapshot was retrieved using the pre-specified function (see *Functions for Processing)* and formatted using *openxlsx* [@openxlsx2] based on the fixed date of preparation of the snapshot (31-Mar-2024) and using *tidyverse* (v`{r} utils::packageVersion("tidyverse")`) [@tidyverse]syntax and associated packages. Date columns were prepared for further analysis using *lubridate* (v`{r} utils::packageVersion("lubridate")`) [@lubridate].
 
 ```{r}
 
@@ -286,5 +295,1941 @@ specific_snapshot <- get_specific_snapshot("20240331")
 
 ```
 
+```{r}
+# You can then use these in your subsequent code:
+temp_file1 <- tempfile(fileext = ".xlsx")
+drive_download(
+  file = specific_snapshot$snapshot$id,
+  path = temp_file1,
+  overwrite = TRUE
+)
+
+# Correction to reset back to excel origin
+DaysDiff <- as.numeric(as.duration(interval(ymd("1899-12-30"), ymd("1970-01-01"))),"days")
+
+SnapshotGen <- openxlsx2::read_xlsx(
+  temp_file1,
+  sheet = "ShoulderGeneral",
+  colNames = TRUE,
+  detectDates = TRUE
+  ) |> dplyr::mutate(
+    Cohort = "General"
+  )
+
+SnapshotRC <- openxlsx2::read_xlsx(
+  temp_file1,
+  sheet = "RotatorCuff",
+  colNames = TRUE,
+  detectDates = TRUE
+  ) |> dplyr::mutate(
+    Cohort = "Rotator Cuff"
+  )
+
+SnapshotGH <- openxlsx2::read_xlsx(
+  temp_file1,
+  sheet = "GlenohumeralInstability",
+  colNames = TRUE,
+  detectDates = TRUE
+  ) |> dplyr::mutate(
+    Cohort = "Glenohumeral Instability"
+  )
 
 
+STROBEInput <- openxlsx2::read_xlsx(
+  temp_file1,
+  sheet = "Strobe_Input",
+  colNames = TRUE,
+  detectDates = TRUE
+  )
+
+```
+
+Dataframes were combined into one for further analysis.
+
+```{r Slice and stack 1}
+## Slice inputs for columns and rows
+#| label: align inputs
+#| code-summary: "line up input frames"
+
+
+SnapshotComb <- SnapshotRC |> dplyr::bind_rows(
+  dplyr::select(SnapshotGH, -ExternalStudyTag)
+  ) |> bind_rows(
+    dplyr::select(
+      SnapshotGen, 
+      -ExternalStudyTag)
+    ) |> dplyr::mutate(
+    PatientID = stringr::str_split_i(TreatmentUID,"\\.",1)
+  ) |> relocate(
+    PatientID, .before = TreatmentUID
+  ) |> mutate(
+    CombID = paste0(PatientID,".",AffectedSide)
+  ) |> relocate(
+    CombID, .after = TreatmentUID
+  ) |> relocate(
+    Cohort, .before = EligibleAtPreop
+  )
+
+```
+
+## Revision 1 - Update Feb 2025
+
+*R316 and R317*
+
+...it is difficult to understand why the available data would be so low with regards to BMI and insurance type. It would seem to this reviewer that this would be fairly straightforward data to obtain from the medical record, if not from the patient themselves.
+
+*BMI is irretrievable from the clinical records - it is stored in another system.*
+
+...it is not clear to me why the data for tear type (full versus partial), involved tendons, etc have less than complete available data.
+
+An additional export of account data was prepared and imported to the workspace using the *readr* package (v`{r} utils::packageVersion("readr")`) [@readr], as well as *tidyverse* syntax and *stringr* (v`{r} utils::packageVersion("stringr")`) [@stringr], to categorise text fields.
+
+```{r, echo = FALSE}
+
+## Authenticate for sheets using the same token
+gs4_auth(token = drive_token())
+
+x <- drive_get(
+as_id("1Xo58d7b6NJOVIxPbYmlCrDRiVGhmKan8")
+)
+
+AcctNewFile = "1Xo58d7b6NJOVIxPbYmlCrDRiVGhmKan8"
+
+
+
+```
+
+```{r}
+
+#Read in full text file
+#
+temp_file2 <- tempfile(fileext = ".txt")
+drive_download(
+  file = as_id(AcctNewFile),
+  path = temp_file2,
+  overwrite = TRUE
+)
+
+AcctDataNew <- readr::read_tsv(
+  file = temp_file2,
+  col_names = TRUE,
+  #trim_ws = TRUE,
+  col_types = list(
+  Id = "c",
+  AccountType = "c",
+  Surname = "c",
+  FirstName = "c",
+  DOB = col_date(format = "%d/%m/%Y"),
+  UsualProvider = "c",
+  HealthFundName = "c",
+  HccPensionNum = "c",
+  DvaNum = "c"
+),
+col_select = c(
+  AlternateID = Id,
+  LastName = Surname,
+  FirstName,
+  DateOfBirth = DOB,
+  HealthFundName
+  )
+) |> dplyr::mutate(
+  DateOfBirth2 = as.numeric(DateOfBirth),
+  HealthFund2 = str_to_lower(HealthFundName),
+  LastName = stringr::str_to_title(LastName)
+) |> unite(
+  col = "CombID",
+  sep = ".",
+  c("FirstName","LastName","DateOfBirth2"),
+  remove = FALSE
+) |> mutate(
+  CombID = stringr::str_squish(CombID),
+    AccountType2 = case_when(
+      stringr::str_detect(HealthFund2,"nil|uninsured") == TRUE ~ "Uninsured",
+      stringr::str_detect(HealthFund2,"fund|pty|limit*|nib|hcf|bupa|medibank|hbf|ahm|health|hba|a.u|^unity$|cbhs|unity|^yes$")  == TRUE ~ "Private",
+      stringr::str_detect(HealthFund2,"dva|vaff|vet|aff|def")  == TRUE ~ "DVA",
+      stringr::str_detect(HealthFund2,"work*|wc|w//c*")  == TRUE ~ "WorkCover",
+      stringr::str_detect(HealthFund2,"^tac$")  == TRUE ~ "TAC",
+      stringr::str_detect(HealthFund2,"sf|self")  == TRUE ~ "SelfFund",
+      )
+    ) |> left_join(
+  PatientTable |> dplyr::select(
+  PatientID,
+  AlternateID
+  ),
+  by = "AlternateID"
+  ) |> dplyr::filter(
+  PatientID %in% SnapshotComb$PatientID
+)
+
+```
+
+Additional intraoperative data was retrieved manually into a table and imported using *googlesheets.*
+
+```{r}
+
+# Authenticate for sheets using the same token
+gs4_auth(token = drive_token())
+
+
+SurgicalGapFill <- googlesheets4::read_sheet(
+  ss = SheetIDs$SurgicalGapSS, 
+  sheet = "Surgical", 
+  col_names = TRUE,
+  col_types = "ccccccccccccccccccccc"
+  ) |> dplyr::select(
+    !c(
+      FirstName,
+      LastName
+    )
+  )
+```
+
+Check that column names are aligned
+
+```{r}
+SnapshotCols <- colnames(SnapshotComb)
+SurgicalCols <- colnames(SurgicalGapFill)
+
+# Find which columns from GapFilledData exist in Mastersheet2
+matching_cols <- dplyr::intersect(SnapshotCols, SurgicalCols)
+print("Columns that match between dataframes:")
+print(matching_cols)
+
+# Find columns in GapFilledData that don't exist in Mastersheet2
+missing_cols <- dplyr::setdiff(SurgicalCols, SnapshotCols)
+if(length(missing_cols) > 0) {
+  print("Warning: These columns in GapFilledData don't exist in Snapshot")
+  print(missing_cols)
+}
+```
+
+Upon review, one row of data was found to have a data entry error for one field (CuffTearSize) which was manually updated in the table.
+
+```{r}
+
+SnapshotComb1 <- dplyr::rows_update(
+  SnapshotComb,
+  SurgicalGapFill,
+  by = "TreatmentUID"
+) |> dplyr::mutate( #Update wayward tear size input
+  CuffTearSizeAP = if_else(
+    TreatmentUID == "1789.1",
+    "20",
+    CuffTearSizeAP
+  )
+)
+```
+
+### RECORD \[5\] - Setting
+
+The PRULO registry is based in a regional private practice for upper limb orthopaedics [@scholes2023].
+
+```{epoxy}
+
+The registry has {nrow(SnapshotComb1)} treatment records with the first patient enrolled {format(min(SnapshotComb1$DateTreatmentRecordCreation, na.rm = TRUE), format = "%d %B %Y")} and the final treatment record created {format(max(SnapshotComb1$DateTreatmentRecordCreation, na.rm = TRUE), format = "%d %B %Y")}.The registry snapshot was extracted on {format(ymd("20240331"), format = "%d %B %Y")}. Patients are followed for up to 2 years after surgery to capture treatment outcomes and patient-reported outcome measures (PROMs). 
+
+```
+
+## Record \[6\] Participants
+
+#### Record \[6.1\] Sample selection
+
+Identify cases receiving the suture of interest. Cases were identified by SKUs identified from the [SKU database](#0 "Database of implants to be tracked for Depuy-Mitek in PRULO database") maintained as part of implant tracking within the registry. Cases were not restricted by available follow up.
+
+Inclusion criteria;
+
+-   Case involves anchor of interest
+
+-   Case is the index procedure within the registry (first use of suture)
+
+-   Patient has not withdrawn consent for inclusion of data in the registry
+
+-   Treatment record is eligible for surgery (it has occurred)
+
+Data manipulation (add columns and filter tables based on column values) was performed with *tidyverse* and converted to display format using *gt* (v`{r} utils::packageVersion(pkg = "gt")`) [@gt].
+
+Table 1: Summary of SKUs (Reference) used to identify cases of interest from PRULO registry
+
+```{r, Hardware of Interest}
+
+## Slice inputs for columns and rows
+#| label: align inputs
+#| include: false
+#| code-summary: "line up input frames"
+#| warning: false
+
+##Identify Index List by SKU/Ref
+
+ImplantTable2 <- ImplantTable |> filter(stringr::str_detect(
+  stringr::str_to_lower(Description),
+  "advance.br")
+)
+
+IncludeAny = paste(ImplantTable2$Reference,sep = "|")
+
+ImplantTable2 |> gt(rowname_col = "row")
+```
+
+A dataframe was prepared to generate a flow chart of record retrieval, screening and patient follow up within the sample of interest.
+
+```{r}
+
+#| label: Consort-Diagram
+#| code-summary: "CONSORT|STROBE"
+
+# Inclusion
+# - Surgical treatment
+# - With hardware of interest
+# After "induction"
+# - Patient withdraws consent
+# - Treatment fails before analysis date
+# - Not eligible for 12m followup
+# 
+CurrentDate <- as.character("20240331")
+
+
+STROBEFlow <- STROBEInput |> dplyr::filter(
+  !is.na(TreatmentUID)
+) |> dplyr::left_join(
+  SnapshotComb1 |> dplyr::select(
+    TreatmentUID,
+    CombID,
+    DateInitialExamination,
+    EligibleAtPreop,
+    EligibleAtx12months
+  ),
+  by = "TreatmentUID"
+) |> dplyr::mutate(
+  exclusion1 = case_when(
+    is.na(SurgicalTreatment) ~ "Not a surgical treatment",
+    SurgicalTreatment == "Surgical" ~ NA_character_,
+    .default = "Not a surgical treatment"
+  ),
+  exclusion2 = case_when(
+    is.na(exclusion1) & stringr::str_detect(RegistryStatus,"Opt-out") ~ "Patient Opt-Out",
+    is.na(exclusion1) & is.na(ImplantCodes) ~ "No hardware of interest",
+    is.na(exclusion1) & Surgeon != "RP" ~ "Other Surgeon",
+    is.na(exclusion1) & stringr::str_detect(ImplantCodes,paste(IncludeAny,collapse = "|")) ~ NA_character_,
+    .default = "No hardware of interest"
+  ),
+  followup = if_else(
+    is.na(exclusion1) & is.na(exclusion2),
+    TreatmentUID,
+    NA_character_
+  ),
+  lost_followup = case_when(
+    is.na(exclusion1) & is.na(exclusion2) & TreatmentStatus == "Failed" & (ymd(DateStatusChange) < ymd(CurrentDate)) ~ "Repair failure",
+    is.na(exclusion1) & is.na(exclusion2) & TreatmentStatus == "No further followup" & (ymd(DateStatusChange) < ymd(CurrentDate)) ~ "Patient Opt-out",
+    is.na(exclusion1) & is.na(exclusion2) & TreatmentStatus == "Ongoing" & is.na(EligibleAtx12months) ~ "Not eligible for followup"
+  ),
+  mitt = if_else(
+    !is.na(followup) & is.na(lost_followup),
+    TreatmentUID,
+    NA_character_
+)
+) |> dplyr::rename(
+  trialno = "TreatmentUID"
+)
+
+```
+
+The combined snapshot dataframe was filtered using the results of the STROBE flowchart dataframe and the sample of interest retrieved.
+
+```{r Slice and stack 3}
+
+## Slice inputs for columns and rows
+#| label: "Identify sample of interest"
+#| code-summary: "line up input frames"
+
+SelectComb <- SnapshotComb1 |> dplyr::select(
+  Cohort,
+  EligibleAtPreop:SignificantComorbidities_Preop,
+  EligibleAtIntraop:OtherShoulderGirdle,
+  starts_with("QDASH_TotalScore"),
+  starts_with("EligibleAt"), 
+  starts_with("WORC"),
+  ComplicationOccurrence) |> 
+  filter(
+    TreatmentUID %in% STROBEFlow$followup
+  ) |> 
+  relocate(
+    Cohort, .before = EligibleAtPreop
+  ) |> left_join(
+    SnapshotComb |>
+      group_by(CombID) |>
+      summarise(CombIDnAll = n()),
+    by = "CombID"
+  ) |>
+  relocate(
+    CombIDnAll, .after = CombID
+  )
+```
+
+The reduced snapshot was filtered further, to remove any non-index surgical procedures from each shoulder from the study mastersheet.
+
+```{r Slice and stack 4}
+
+## Slice inputs for columns and rows
+#| label: "Remove non-index procedures"
+#| code-summary: "line up input frames"
+
+
+
+# Add a sequential label of treatment records per patient + joint in order of surgery date
+SelectComb1 <- SelectComb |> group_by(CombID) |> mutate(
+  CombIDn = row_number(DateTreatment)
+) |>
+  relocate(
+    CombIDn, .after = CombID
+  ) |> arrange(CombID) |> filter(
+    CombIDn == 1
+  )
+
+# Retrieve all treatment records for each patient + joint regardless of hardware usage
+SelectComb1a <- SnapshotComb1 |> filter(
+  CombID %in% SelectComb1$CombID
+) |> arrange(CombID)
+
+#Add a label with the number of treatments subsequent to the index procedure
+SelectComb1b <- SelectComb1a |> left_join(
+  SelectComb1 |> dplyr::select(CombID,
+                                DateTreatment),
+  by = "CombID"
+) |> filter(
+  DateTreatment.x > DateTreatment.y) |>
+  group_by(CombID) |>
+  summarise(CombIDnSub = n()
+) |>
+  ungroup() 
+
+#Finalise label with number of subsequent treatments
+Mastersheet <- SelectComb1 |> left_join(
+    SelectComb1b,
+    by = "CombID"
+  ) |> mutate(
+    CombIDnSub2 = case_when(
+    is.na(CombIDnSub) ~ 0,
+    .default = CombIDnSub
+    ),
+    TreatmentStatus2 = case_when(
+      stringr::str_detect(str_to_lower(TreatmentStatus),"pend") ~ "Ongoing",
+      .default = TreatmentStatus
+    ),
+  ) |> relocate(
+    CombIDnSub2, .after = CombID
+  ) |> dplyr::select(-CombIDnSub) |> ungroup()
+```
+
+```{epoxy}
+
+Of the {nrow(Mastersheet)} records in the mastersheet, {nrow(Mastersheet |> filter(grepl("opt",RegistryStatus,ignore.case = TRUE)))} treatment records had withdrawn consent for data inclusion and {nrow(Mastersheet |> filter(grepl("prom",RegistryStatus,ignore.case = TRUE)))} had declined to participate in PROMs. 
+
+```
+
+### Record \[6.2\] Algorithm validation
+
+Record selection code was cross-checked by manual record checking within the registry snapshot for a subset (N = 10) of cases.
+
+### Record \[6.3\] Data linkage
+
+No data linkage was utilised for this analysis.
+
+## Record \[7\] Variables
+
+Key variables defined as part of this analysis are summarised in Table 2 below.
+
+Table 2: Summary of key variable definitions in the analysis
+
+| Category | Variable | Comments | Citation |
+|------------------|------------------|--------------------|------------------|
+| Patient Characteristics | Insurance Status | Recode from account data from practice management system to insurance status |  |
+| Pathology | Primary diagnosis | Free text coded using ICD-10 international |  |
+|  | CuffRetraction | Defined as per *modified* Patte grading | [@Lädermann2016] |
+|  | CuffCondition | Fatty infiltration as assessed by Goutallier scale | [@fuchs1999] |
+|  | TearPattern | Shape the tear makes within the margins of the cuff as viewed in the transverse plane | [@Lädermann2016] |
+|  | OtherShoulderPathology | Free-text coded as present \[Yes\] or not \[No\] |  |
+| Management - Surgery | RepairAugment | Techniques used to augment the repair |  |
+|  | CuffTension | Surgeon perceived tension to restore anatomical footprint of repair |  |
+|  | RepairQuality | Surgeon subjective rating of the repair quality |  |
+| Adverse Events | Modidifed sink grade | Modification of the Sink grading of complication severity | [@felsch2021] |
+| Patient-Reported Outcomes | WORC Physical Q3 | How much weakness do you experience in your shoulder? | [@kirkley2003] |
+
+## Record \[8\] Data sources
+
+Data was sourced directly from the PRULO clinical registry.
+
+## Record \[9\] Bias
+
+For a discussion of biases in the context of the clinical registry utilised for this analysis, refer to [@scholes2023]. Specific to this analysis, the following considerations were noted;
+
+Table 3: Biases in analysis of observational cohort of a clinical registry
+
+| Bias | Definition | Source | Mitigation |
+|------------------|------------------|------------------|-------------------|
+| Misclassification | Treatment record labelled into incorrect cohort. PROMs package not aligned to | [@Benchimol2015] | Clinical notes reviewed by experienced reviewer and matched to ICD10 code by definition. |
+| Confounder | An variable of interest and a target outcome simultaneously influenced by a third variable | [@tennant2020] | PROMs analysis incorporated adjustment for age and sex |
+| Missing data | The absence of a data value where a treatment record is eligible to have a data value collected | [@carroll2020] | Multiple imputation utilised |
+| Prevalent user | Follow-up starts after eligible individuals have started the treatment. The follow-up time is left-truncated | [@nguyen2021] | Eligibility and enrollment is performed prior to treatment offering for any patient or new presentation. Index procedures identified for analysis are followed prior to surgery occurring. |
+| Selection | Treatments are selected based on post-treatment criteria | [@nguyen2021] | Unable to be mitigated fully - records are identified by presence of hardware code associated with suture of interest |
+| Immortal time | Individuals need to meet eligibility criteria that can only be assessed after follow-up has started | [@nguyen2021] | Patients enrolled at time of diagnosis |
+| Pseudoreplication | Analyse data while ignoring dependency between observations. Inadequate model specification. | [@davies2015; @lazic2010] | Cluster for patient in survival (all-cause failure and retear). Utilise mixed effects linear model (lme4::lmer) for PROMs analysis with treatment identifier as random effect |
+
+## Record \[10\] Sample size
+
+Sample size was derived from the available records of the Registry at the time of analysis.
+
+## Record \[11\] Quantitative variables
+
+The anterior-posterior (AP) and mediolateral (ML) dimensions of the cuff tear were reported and multiplied to calculate tear area (mm\^2). The tear was also classified according to [@rashid2017].
+
+-   **Small** tears were defined as full-thickness defects in the supraspinatus tendon under 1 cm in the anterior--posterior (AP) dimension.
+
+-   **Medium** tears were defined as full-thickness defects in the supraspinatus tendon only, greater than 1 cm and less than 3 cm in the AP dimension.
+
+-   **Large** tears involved full-thickness defects of both the supraspinatus and infraspinatus tendons, greater than 3 cm, and less than 5 cm in the AP dimension.
+
+-   **Massive** tears involved all 3 tendons (supraspinatus, infraspinatus, and subscapularis) and were greater than 5 cm in the AP dimension.
+
+Partial tears were left labelled as *partial*. Ultimately recoded tear classification based on AP tear length, as the involvement of other tendons for tears of small length was not adequately defined in the original paper.
+
+```{r Quantitative variables 1}
+## Slice inputs for columns and rows
+
+##Sort out variable types; Calculate wait time
+
+Mastersheet1 <- Mastersheet |> rename_with(
+   ~sub("_TotalScore_","_",.), 
+   contains("_TotalScore_")
+   ) |> rename_with(
+     ~sub("EligibleAtx","Eligible_",.), 
+     starts_with("EligibleAtx")
+     ) |> rename_with(
+       ~sub("EligibleAt","Eligible_",.), 
+       starts_with("EligibleAt")
+       ) |> rename_with(
+         ~sub("WORC_","WORC",.), 
+         starts_with("WORC_")
+         ) |> mutate(
+    CuffTearSizeML = as.numeric(CuffTearSizeML),
+    CuffTearSizeAP = as.numeric(CuffTearSizeAP),
+    WaitTime = as.numeric(as.duration(interval(ymd(DateInitialExamination), ymd(DateTreatment))),"weeks"),
+    across(starts_with("WORC"),as.numeric),
+    across(starts_with("QDASH"),as.numeric),
+    across(where(is.character) & !contains("ID", ignore.case = TRUE), as.factor),
+    Sex2 = case_when(
+      Sex == "F" ~ "Female",
+      Sex == "M" ~ "Male"),
+    Surgeon2 = case_when(
+      Surgeon == "KE" ~ "A",
+      Surgeon == "RP" ~ "B",
+      Surgeon == "GB" ~ "C",
+      .default = NA_character_),
+    TearClass = case_when(
+      CuffStatus == "Partial Tear" ~ "Partial",
+      CuffStatus == "Full Tear" & CuffTearSizeAP <=10 ~ "Small",
+      CuffStatus == "Full Tear" & between(CuffTearSizeAP,11,30) ~ "Medium",
+      CuffStatus == "Full Tear" & between(CuffTearSizeAP,31,50) ~ "Large",
+      CuffStatus == "Full Tear" & CuffTearSizeAP > 50 ~ "Massive",
+      .default = NA_character_),
+    TendonsInvolved = case_when(
+      CuffTendonsInvolved == "No other tendon involved" ~ "Supraspinatus (isolated)",
+      .default = CuffTendonsInvolved
+    ),
+    TearArea = CuffTearSizeAP * CuffTearSizeML,
+    OtherShoulderPathology = case_when(
+      stringr::str_detect(str_to_lower(OtherShoulderGirdle),"no",negate = TRUE) & !is.na(OtherShoulderGirdle) ~ "Yes",
+      .default = OtherShoulderGirdle
+      ),
+    RepairAugment2 = case_when(
+      stringr::str_detect(str_to_lower(AdjunctProcedures), "scr|superior") ~ "Superior Capsular",
+      RepairAugmentation == "Nil" ~ "None",
+      .default = RepairAugmentation
+      ),
+    TreatStatus = case_when(
+    TreatmentStatus == "Failed" ~ 1,
+    .default = 0
+  ),
+  TreatEndDate = coalesce(DateStatusChange,ymd(CurrentDate))
+         ) |>
+  mutate(
+  TreatDuration = as.numeric(as.duration(interval(ymd(DateTreatment), ymd(TreatEndDate))),"weeks")
+    ) |> relocate(
+      TearClass, 
+      .after = CuffCondition) |> relocate(
+        TearArea, 
+        .after = CuffCondition
+        )
+```
+
+Data was read in from database table to determine account type.
+
+```{r}
+PatientTable1 <- PatientTable |> filter(
+  !is.na(PatientCreationDate) & !is.na(DateOfBirth)
+) |> mutate(
+  DateOfBirth2 = as.numeric(DateOfBirth),
+  LastName = stringr::str_to_title(LastName)
+) |> unite(
+  col = "CombID",
+  sep = ".",
+  c("FirstName","LastName","DateOfBirth2"),
+  remove = FALSE
+)
+```
+
+```{r}
+
+Mastersheet1b <- Mastersheet1 |> left_join(
+  PatientTable1 |> dplyr::select(
+    FirstName,
+    LastName,
+    PatientID
+  ),
+  by = "PatientID"
+)  |> mutate(
+  DateOfBirth2 = as.numeric(as_date(DateOfBirth))
+  ) |> unite(
+    col = "CombID",
+    sep = ".",
+    c("FirstName","LastName","DateOfBirth2"),
+    remove = FALSE
+) |> left_join(
+  AcctDataNew |> dplyr::select(
+    AccountType2,
+    HealthFund2,
+    PatientID
+    ),
+  by = "PatientID"
+  )
+
+```
+
+Procedure details were extracted from the master table and processed to enable presentations in summary tables.
+
+```{r Management summary}
+OpData <- Mastersheet1b |> dplyr::select(
+  TreatmentUID,
+  SurgicalTreatment,
+  PatientPosition,
+  ArthroscopicApproach:OtherShoulderGirdle
+  ) |> dplyr::mutate(
+  AdjunctProcedures = as.character(AdjunctProcedures)
+) |> separate_longer_delim(
+    AdjunctProcedures,
+    stringr::regex("[;,]")
+    ) |> dplyr::mutate(
+      AdjunctProcedures2 = str_squish(AdjunctProcedures)
+      ) |> dplyr::mutate(
+      AdjunctProcedures3 = case_when(
+      AdjunctProcedures2 == "None performed" ~ "None",
+      str_detect(str_to_lower(AdjunctProcedures2), "resection|osteot") ~ "Clavicle Resection",
+str_detect(str_to_lower(AdjunctProcedures2), "release|debulk") ~ "Ligament|Capsule Release",
+str_detect(str_to_lower(AdjunctProcedures2), "transfer") ~ "Tendon Transfer",
+str_detect(str_to_lower(AdjunctProcedures2), "debride") ~ "Interval|Acromion|Capsule Debridement",
+str_detect(str_to_lower(AdjunctProcedures2), "burs|excis") ~ "Bursectomy",
+str_detect(str_to_lower(AdjunctProcedures2), "scr|superior|calcific|incorporat|supraspin|cable") ~ "None",
+      .default = AdjunctProcedures2
+    )
+  )
+```
+
+```{r}
+OpData2 <- OpData |>
+  group_by(TreatmentUID) |>
+    summarise(AdjunctProcedures4 = paste(AdjunctProcedures3,collapse = "; ")
+              ) |> mutate(
+                AdjunctProcedures5 = case_when(
+                  stringr::str_detect(AdjunctProcedures4,"None") & str_length(AdjunctProcedures4) > 4 ~ str_replace_all(AdjunctProcedures4,"(None|None[;\\s]*|[;\\s]*None|[;\\s]+)",""),
+                  .default = AdjunctProcedures4
+                )
+              ) |> mutate(
+                AdjunctProcedures6 = str_squish(AdjunctProcedures5)
+              ) |> dplyr::select(-AdjunctProcedures4,-AdjunctProcedures5)
+```
+
+```{r}
+Mastersheet2 <- left_join(
+  Mastersheet1b,
+  OpData2,
+  by = "TreatmentUID"
+)
+
+```
+
+The complications table was also processed for further analysis.
+
+```{r Complications preparation}
+# Join sufficient columns to complictable to perform calculations
+
+ComplicTable1 <- ComplicTable |> rename(
+  TreatmentUID = `Treatment ID`) |> left_join(
+    SnapshotComb1 |> dplyr::select(
+      CombID,
+      TreatmentUID,
+      DateTreatment), 
+    by = "TreatmentUID"
+  ) |> mutate(
+    ReopDelay = as.numeric(as.duration(interval(ymd(DateTreatment), ymd(`Reoperation Procedure Date`))),"weeks"),
+    OccurDelay = as.numeric(as.duration(interval(ymd(DateTreatment), ymd(`Date of Occurrence`))),"days"),
+ComplicationNature = str_replace_all(str_to_lower(`Complication Nature`),"[;.,-]","")
+) |> mutate(
+    Intraop = case_when(
+      ReopDelay == 0 ~ "Yes",
+      str_detect(ComplicationNature,"intraop") ~ "Yes",
+      .default = "No"
+      ),
+    Strata = case_when(
+str_detect(ComplicationNature,"capsulitis|frozen|stiff|release|enthesop*") ~ "Capsulitis - Stiffness",
+str_detect(ComplicationNature,"repair|fail|recurrent|rupture|retear|torn|retorn|remov*|loose anchor*") ~"Repair Failure",
+str_detect(ComplicationNature,"persistent|infarction|palsy|pain|radiculo*|crps|complex") ~"Pain - Other",
+str_detect(ComplicationNature,"dvt") ~"Thromboembolic",
+str_detect(ComplicationNature,"washout|infect|antibiot*|abx|debrid*|washout") ~"Infection",
+str_detect(ComplicationNature,"explant*|intraop*|regraft") ~ "Explant",
+str_detect(ComplicationNature,"fract*") ~ "Fracture",
+str_detect(ComplicationNature,"brok*|snap*|break") ~ "Hardware",
+str_detect(ComplicationNature,"annoy*|irritat*") ~ "Hardware Irritation",
+str_detect(ComplicationNature,"skin|wound|rash") ~ "Wound - Skin",
+str_detect(ComplicationNature,"disloc*|instabil*") ~ "Dislocation - Instability",
+),
+  ComplicationOccurrence = case_when(
+    `Complication Occurrence` == "No" & (!is.na(ComplicationNature) & !(grepl("nil",ComplicationNature, ignore.case = TRUE))) ~ "Yes",
+    .default = `Complication Occurrence`
+  )
+) |> filter(
+  stringr::str_detect(str_to_lower(ComplicationOccurrence),"yes|possible", negate = TRUE)  & !is.na(CombID)
+)
+```
+
+```{r Retrieve relevant complications}
+
+
+ComplicTable2 <- ComplicTable1 |> 
+  dplyr::group_by(CombID, Strata, Intraop) |>
+  dplyr::arrange(`Date of Occurrence`) |>
+  dplyr::slice_min(`Date of Occurrence`) |>
+  dplyr::ungroup() |>
+  dplyr::filter(
+    TreatmentUID %in% Mastersheet2$TreatmentUID & (Timestamp < ymd(CurrentDate))
+    )|> dplyr::distinct(
+      CombID, Strata, .keep_all = TRUE
+      )
+
+
+```
+
+Complication events were graded in a separate table according to [@felsch2021] and retrieved into the workspace using *googlesheets4*.
+
+```{r}
+
+# Authenticate for sheets using the same token
+gs4_auth(token = drive_token())
+
+ComplicTable3 <- googlesheets4::range_read(
+  ss = SheetIDs$SurgicalGapSS,
+  sheet = "Complications",
+  range = "A1:Q",
+  col_names = TRUE,
+  col_types = "TcccDccDcDnncccci"
+  )
+
+#Ready for table presentation
+
+```
+
+Tables were rearranged with *tidyverse* to prepare patient-reported outcomes (PROMs) for analysis in the *long* format. Separate dataframes were created for the QuickDASH and the WORC, as the QuickDASH was collected at 3months and the WORC was not.
+
+```{r}
+MasterPROM <- Mastersheet2 |> dplyr::select(
+  TreatmentUID,
+  starts_with("QDASH"),
+  starts_with("WORC"),
+  starts_with("Eligible")
+) |> pivot_longer(
+  cols = !TreatmentUID,
+  names_to = c(".value","TimePoint"),
+  names_sep = "_",
+  values_drop_na = TRUE
+) |> mutate(
+  TimePoint = factor(TimePoint, levels = c("Preop","3months","6months","12months"), ordered = TRUE, exclude = NA),
+) |> filter(!is.na(TimePoint))
+
+MasterPROMWORC <- MasterPROM |> filter(TimePoint != "3months")
+
+```
+
+Tables were modified to track anchor usage.
+
+```{r}
+
+ImplantTable2a <- ImplantTable2 |> mutate(
+  Suture = str_to_title(str_extract(str_to_lower(Description), "\\b\\w+cord\\b"))
+)
+
+AnchorUsage <- Mastersheet2 |> dplyr::select(
+  TreatmentUID,
+  ImplantCodes
+) |> separate_longer_delim(cols = ImplantCodes,", ") |> left_join(
+  ImplantTable2a |> dplyr::select(
+    Reference,
+    Suture
+  ),
+  by = join_by("ImplantCodes" == "Reference")
+)
+```
+
+## Record \[12\] Statistical methods
+
+A number of analytical techniques were employed to i) clean the data inputs as well as ii) evaluate missingness in the dataset and iii) complete the descriptive analysis of;
+
+-   Patient characteristics
+
+-   Pathology details
+
+-   Patient, implant and adverse event time to event
+
+-   Patient-reported outcomes
+
+### Record \[12.1\] Access to population
+
+The registry system represents all cases presenting to the rooms of a surgical group within Geelong, Australia using the implant of interest from the inception of the clinical registry to the analysis date. All reviewed charts from the operating surgeons practice records (electronic medical record) were entered into database and the present analysis draws data from a regular compilation of the registry records (snapshot) produced quarterly by the registry administration team.
+
+### Record \[12.2\] Data cleaning methods
+
+Complication descriptions were pre-processed to remove relational terms (stopwords) and expand abbreviations to improve clarity.
+
+Dates of events (preceding and subsequent surgical records; adverse events including mortality) relative to index surgery date were assessed using coded checks to flag anomalies and were resolved by further manual review to resolve inconsistencies or discrepancies with the chart review input data stored in the registry database.
+
+### Record \[12.3\] Data linkage
+
+Not applicable
+
+### Record \[12.4\] Missingness
+
+#### Evaluation
+
+Missingness was assessed with visualisation and table functions in the *naniar* package (v`{r} utils::packageVersion("naniar")`) [@naniar] and compiled into figures using *patchwork* (v`{r} utils::packageVersion("patchwork")`) [@patchwork].
+
+```{r Missingness Plots}
+
+# Assessing missingness from Mastersheet2
+
+#Patient characteristics
+
+MissFig1 <- Mastersheet2 |>
+ dplyr::select(
+    AgeAtTreatment, 
+    Sex2, 
+    IndexSide,
+    Surgeon2,
+    BMI,
+    BilateralStatus,
+    WaitTime,
+    AccountType2) |> rename(
+      `Age at Surgery` = "AgeAtTreatment", 
+    Sex = "Sex2", 
+    `Affected Side` = "IndexSide",
+    Surgeon = "Surgeon2",
+    `Body Mass Index` = "BMI",
+    `Bilateral Status` = "BilateralStatus",
+    `Initial Consult to Surgery` = "WaitTime",
+    `Insurance Status` = "AccountType2"
+    ) |> gg_miss_var(show_pct = TRUE) + labs(title = "Patient Characteristics")
+
+#Pathology characteristics
+
+MissFig2 <- Mastersheet2 |>
+  dplyr::select(
+    TreatmentType,
+    CuffStatus,
+    CuffCondition,
+    CuffTearRetraction,
+    CuffTendonDelaminated,
+    TendonsInvolved,
+    CuffTearSizeAP, 
+    CuffTearSizeML,
+    TearArea, 
+    TearClass, 
+    CuffTearPattern,
+    OtherShoulderPathology
+    ) |> rename(
+   `Primary Presentation` = "TreatmentType",
+    `Full Tear` = "CuffStatus",
+    `Cuff Condition` = "CuffCondition",
+    `Tendon Retraction` = "CuffTearRetraction",
+    `Tendon Delamination` = "CuffTendonDelaminated",
+    `Tendons Involved (+Ssp)` = "TendonsInvolved",
+    `Tear Size AP (mm)` = "CuffTearSizeAP", 
+    `Tear Size ML (mm)` = "CuffTearSizeML",
+    `Tear Area (mm^2)` = "TearArea", 
+    `Tear Classification` = "TearClass", 
+     `Tear Pattern` = "CuffTearPattern",
+    `Other Pathology` = "OtherShoulderPathology" 
+    ) |> gg_miss_var(show_pct = TRUE) + labs(title = "Pathology Characteristics")
+
+#Surgical Technique
+
+MissFig3 <- Mastersheet2 |>
+  dplyr::select(
+    ArthroscopicApproach,
+    PatientPosition,
+    CuffTendonsTreated,
+    RepairType,
+    AnchorFixation,
+    RepairAugment2,
+    CuffRepairTension,
+    CuffRepairQuality
+    ) |> rename(
+          Arthroscopy = "ArthroscopicApproach",
+         `Beachchair Position` = "PatientPosition",
+         `Supraspinatus Isolated Repair` = "CuffTendonsTreated",
+         `Double Row Repair` = "RepairType",
+         `Knotted Anchor Fixation` = "AnchorFixation",
+         `Superior Capsular Augment` = "RepairAugment2",
+         `Low Repair Tension` = "CuffRepairTension",
+         `Anatomic Repair` = "CuffRepairQuality"  
+    ) |> gg_miss_var(show_pct = TRUE) + labs(title = "Surgical Details")
+
+#PROMs
+MissFig4 <- MasterPROM |>
+  dplyr::select(QDASH,
+                TimePoint) |>  gg_miss_var(show_pct = TRUE,
+                                        facet = TimePoint) + labs(title = "Patient Reported Outcomes - 1")
+
+
+MissFig5 <- MasterPROMWORC |>
+  dplyr::select(WORCNorm,
+                TimePoint) |>  gg_miss_var(show_pct = TRUE,
+                                        facet = TimePoint) + labs(title = "Patient Reported Outcomes - 2")
+
+MissFig1 + MissFig2 + MissFig3 + MissFig4 + plot_layout(ncol = 2)
+
+MissFig5
+
+
+```
+
+Figure 1: Missingness by variable
+
+```{r}
+
+PROMsmiss <- MasterPROM |> dplyr::select(-TreatmentUID) |>
+  group_by(TimePoint) |>
+  miss_var_summary() |>
+  pivot_wider(names_from = TimePoint, 
+              values_from = c(pct_miss))
+
+```
+
+```{epoxy}
+
+The compliance for the QuickDASH at baseline was {100-round(as.numeric(PROMsmiss[8,3]),digits = 1)}% and for the WORCNorm it was {100-round(as.numeric(PROMsmiss[7,3]),digits = 1)}%.
+
+The compliance for the QuickDASH was {100-round(as.numeric(PROMsmiss[33,6]),digits = 1)}% and for the WORCNorm it was {100-round(as.numeric(PROMsmiss[32,6]),digits = 1)}% at 12months.
+
+```
+
+#### Management
+
+The data tables were reduced to the required columns (PROMs and adjunct columns) in preparation for multiple imputation using chained equations [@white2010] with the *mice* package (v`{r} utils::packageVersion("mice")`) [@mice]. One patient with bilateral records in the sample had one field (EducationLevel_Preop) mirrored from one side record to the other, where it was missing. Character fields were converted to factors and the dataset was filtered to those cases that were eligible for 12months followup.
+
+```{r}
+
+QDASHPROMInput <- MasterPROM |> left_join(
+  dplyr::select(
+    Mastersheet2,
+    TreatmentUID,
+    WaitTime,
+    IndexSide,
+    BilateralStatus,
+    EducationLevel_Preop,
+    AgeAtTreatment,
+    Sex2,
+    ComplicationOccurrence
+    ),
+  by = "TreatmentUID"
+) |> dplyr::mutate(
+  Complication2 = case_when(
+    ComplicationOccurrence != "No" ~ "Yes",
+    .default = "No"
+  ),
+  across(where(is.character) & !contains("ID", ignore.case = TRUE), as.factor),
+  TimePoint = fct_relevel(
+      as.factor(TimePoint), 
+      c("Preop", "3months", "6months", "12months")
+    ),
+    Sex2 = fct_relevel(
+      as.factor(Sex2), 
+      c("Female", "Male")
+    ),
+    BilateralStatus = fct_relevel(
+      as.factor(BilateralStatus), 
+      c("No", "Yes")
+    ),
+    EducationLevel_Preop = fct_relevel(
+      as.factor(EducationLevel_Preop), 
+      c(
+        "Up to Secondary Year 10", 
+        "Secondary - Year 12",
+        "Post-secondary trade certificate or diploma",
+        "Undergraduate degree",
+        "Postgraduate degree")
+      ),
+    TreatmentInt = as.integer(str_replace(TreatmentUID, "\\.", ""))
+) |> dplyr::select(
+  !c(
+    ComplicationOccurrence,
+    Eligible,
+    WORCPhysical:WORCEmotions,
+    WORCPhysicalQ3,
+    WORCNorm
+    )
+  ) |> dplyr::filter(
+    TreatmentUID %in% STROBEFlow$mitt
+  ) |> mutate(
+    
+  ) |> dplyr::rows_update(
+    tibble(
+    TreatmentUID = "253.2",
+    EducationLevel_Preop = "Undergraduate degree"
+    ),
+    by = "TreatmentUID"
+  )
+
+
+```
+
+A row was inserted for one case that did not return an entry for the 3month timepoint. The dataframe was reordered to create a *visitsequence* for the multiple imputation function.
+
+```{r}
+
+# 
+QDASHPROMInput2 <- dplyr::rows_append(
+  QDASHPROMInput,
+  tibble(TreatmentUID = "1553.1",
+  TimePoint = "3months",
+  BilateralStatus = "No",
+  AgeAtTreatment = 74,
+  Sex2 = "Female",
+  TreatmentInt = 22,
+  IndexSide = "Dominant",
+  WaitTime = 24.8571429,
+  Complication2 = "No",
+  EducationLevel_Preop = NA_character_
+  )
+) |> dplyr::select(
+    -TreatmentUID
+  ) |> dplyr::relocate( # reorder columns for visitsequence
+    all_of(
+      c(
+        "TreatmentInt",
+        "TimePoint",
+        "Sex2",
+        "AgeAtTreatment",
+        "BilateralStatus",
+        "WaitTime",
+        "IndexSide",
+        "EducationLevel_Preop",
+        "Complication2",
+        "QDASH"
+      )
+    )
+    
+  )
+```
+
+A predictor matrix was generated to specify the combination of variables to be drawn on for the imputation of each column in the dataset. In addition, a *method* matrix was created to specify varying univariate imputations to account for the multilevel nature of the dataset \[citation\]. Patient level variables (education, sex, bilateralstatus) were imputed as level-2 variables and the PROMs columns treated as level-1 variables.
+
+```{r}
+
+# TreatmentInt - no missing
+# TimePoint - no missing
+# Sex2 - no missing
+# AgeAtTreatment - no missing
+# BilateralStatus - no missing
+# WaitTime - no missing
+# IndexSide - Level 2 missing
+# EducationLevel_Preop - level 2 missing
+# Complication2 - not missing
+# QDASH - level 2 missing
+
+
+# Make predictor matrix
+# 
+QDASHPred <- make.predictorMatrix(
+  QDASHPROMInput2
+)
+
+QDASHPred["TreatmentInt", ] <- 0
+QDASHPred["TimePoint", ] <- 0
+QDASHPred["Sex2", ] <- 0
+QDASHPred["AgeAtTreatment", ] <- 0
+QDASHPred["BilateralStatus", ] <- 0
+QDASHPred["WaitTime", ] <- 0
+QDASHPred["Complication2", ] <- 0
+QDASHPred["IndexSide", ] <- c(-2,0,1,1,1,1,0,1,1,1)
+QDASHPred["EducationLevel_Preop", ] <- c(-2,0,1,1,1,1,1,0,1,1)
+QDASHPred["QDASH", ] <- c(-2,1,1,1,1,1,1,1,1,0)
+
+# Specify Method
+# Method specification
+QDASHMeth <- make.method(QDASHPROMInput2)
+
+# For time-invariant variables (level-2)
+QDASHMeth["EducationLevel_Preop"] <- "2lonly.pmm"  # Or "2lonly.polyreg" for categorical
+QDASHMeth["IndexSide"] <- "2lonly.bin"  # Or "2lonly.polyreg" for categorical
+
+
+# For time-varying variables (level-1)
+QDASHMeth["QDASH"] <- "pmm"  # Multilevel imputation allowing for within-person variation
+# Visit sequence
+# 
+QDASHseq <- mice::make.visitSequence(QDASHPROMInput2)
+
+```
+
+```{r}
+QDASHImputed <- mice::mice(
+  data = QDASHPROMInput2,
+  m = 10,
+  predictorMatrix = QDASHPred,
+  visitSequence = QDASHseq,
+  method = QDASHMeth,
+  maxit= 15,
+  printFlag = FALSE
+)
+
+plot(QDASHImputed)
+```
+
+```{r}
+
+WORCPROMInput <- MasterPROM |> left_join(
+  dplyr::select(
+    Mastersheet2,
+    TreatmentUID,
+    WaitTime,
+    IndexSide,
+    BilateralStatus,
+    EducationLevel_Preop,
+    AgeAtTreatment,
+    Sex2,
+    ComplicationOccurrence
+    ),
+  by = "TreatmentUID"
+) |> dplyr::mutate(
+  Complication2 = case_when(
+    ComplicationOccurrence != "No" ~ "Yes",
+    .default = "No"
+  ),
+  across(where(is.character) & !contains("ID", ignore.case = TRUE), as.factor),
+  TimePoint = fct_relevel(
+      as.factor(TimePoint), 
+      c("Preop", "3months", "6months", "12months")
+    ),
+    Sex2 = fct_relevel(
+      as.factor(Sex2), 
+      c("Female", "Male")
+    ),
+    BilateralStatus = fct_relevel(
+      as.factor(BilateralStatus), 
+      c("No", "Yes")
+    ),
+    EducationLevel_Preop = fct_relevel(
+      as.factor(EducationLevel_Preop), 
+      c(
+        "Up to Secondary Year 10", 
+        "Secondary - Year 12",
+        "Post-secondary trade certificate or diploma",
+        "Undergraduate degree",
+        "Postgraduate degree")
+      ),
+    TreatmentInt = as.integer(str_replace(TreatmentUID, "\\.", ""))
+) |> dplyr::select(
+  !c(
+    ComplicationOccurrence,
+    Eligible,
+    WORCPhysical:WORCEmotions
+    )
+  ) |> dplyr::filter(
+    TreatmentUID %in% STROBEFlow$mitt,
+    TimePoint != "3months"
+  ) |> mutate(
+    
+  ) |> dplyr::rows_update(
+    tibble(
+    TreatmentUID = "253.2",
+    EducationLevel_Preop = "Undergraduate degree"
+    ),
+    by = "TreatmentUID"
+  )
+
+
+```
+
+```{r}
+# Fix up missing row (General switched to RotatorCuff)
+# 
+WORCPROMInput2 <- WORCPROMInput |> dplyr::select(
+    -TreatmentUID
+  ) |> dplyr::relocate( # reorder columns for visitsequence
+    all_of(
+      c(
+        "TreatmentInt",
+        "TimePoint",
+        "Sex2",
+        "AgeAtTreatment",
+        "BilateralStatus",
+        "WaitTime",
+        "IndexSide",
+        "EducationLevel_Preop",
+        "Complication2",
+        "QDASH",
+        "WORCPhysicalQ3",
+        "WORCNorm"
+      )
+    )
+    
+  )
+```
+
+```{r}
+
+# TreatmentInt - no missing
+# TimePoint - no missing
+# Sex2 - no missing
+# AgeAtTreatment - no missing
+# BilateralStatus - no missing
+# WaitTime - no missing
+# IndexSide - Level 2 missing
+# EducationLevel_Preop - level 2 missing
+# Complication2 - not missing
+# QDASH - level 2 missing
+
+
+# Make predictor matrix
+# 
+WORCPred <- make.predictorMatrix(
+  WORCPROMInput2
+)
+
+WORCPred["TreatmentInt", ] <- 0
+WORCPred["TimePoint", ] <- 0
+WORCPred["Sex2", ] <- 0
+WORCPred["AgeAtTreatment", ] <- 0
+WORCPred["BilateralStatus", ] <- 0
+WORCPred["WaitTime", ] <- 0
+WORCPred["Complication2", ] <- 0
+WORCPred["IndexSide", ] <- c(-2,0,1,1,1,1,0,1,1,1,1,1)
+WORCPred["EducationLevel_Preop", ] <- c(-2,0,1,1,1,1,1,0,1,1,1,1)
+WORCPred["QDASH", ] <- c(-2,1,1,1,1,1,1,1,1,0,1,1)
+WORCPred["WORCPhysicalQ3", ] <- c(-2,1,1,1,1,1,1,1,1,1,0,1)
+WORCPred["WORCNorm", ] <- c(-2,1,1,1,1,1,1,1,1,1,1,0)
+
+# Specify Method
+# Method specification
+WORCMeth <- make.method(WORCPROMInput2)
+
+# For time-invariant variables (level-2)
+WORCMeth["EducationLevel_Preop"] <- "2lonly.pmm"  # Or "2lonly.polyreg" for categorical
+WORCMeth["IndexSide"] <- "2lonly.bin"  # Or "2lonly.polyreg" for categorical
+
+
+# For time-varying variables (level-1)
+WORCMeth["QDASH"] <- "pmm"  # Multilevel imputation allowing for within-person variation
+WORCMeth["WORCPhysicalQ3"] <- "pmm"  # Multilevel imputation allowing for within-person variation
+WORCMeth["WORCNorm"] <- "pmm"  # Multilevel imputation allowing for within-person variation
+
+# Visit sequence
+# 
+WORCseq <- mice::make.visitSequence(WORCPROMInput2)
+
+```
+
+```{r}
+WORCImputed <- mice::mice(
+  data = WORCPROMInput2,
+  m = 10,
+  predictorMatrix = WORCPred,
+  visitSequence = WORCseq,
+  method = WORCMeth,
+  maxit= 15,
+  printFlag = FALSE
+)
+
+plot(WORCImputed)
+```
+
+# Analysis Results
+
+## Record \[13\] Participants
+
+```{epoxy}
+
+The initial export from the registry returned {nrow(SnapshotComb1)} records of all types. 
+
+```
+
+### Record \[13.1\] Treatment selection
+
+A flow chart of individual treatment episodes (treatments) was generated using the *consort* package (v`{r} utils::packageVersion("consort")`)[@consort] and prepared for display with the *knitr* package (v`{r} utils::packageVersion("knitr")`) [@knitr].
+
+The diagram below summarises recruitment and categorisation of patients into the PRULO registry.
+
+```{r}
+
+STROBEPlot <- consort::consort_plot(
+  data = STROBEFlow,
+  orders = c(
+    trialno = "Population",
+    exclusion1 = "Excluded",
+    trialno = "Received Surgery",
+    exclusion2 = "Excluded from Sample",
+    followup = "Study Sample at Baseline",
+    lost_followup = "Unavailable 12m data",
+    mitt = "Final Analysis"),
+side_box = c(
+  "exclusion1", 
+  "exclusion2", 
+  "lost_followup"
+  ),
+cex = 0.9
+)
+
+knitr::knit_print(STROBEPlot)
+```
+
+Figure 2: Flow chart of treatment record inclusion and separation into cohorts for analysis. mFU - Minimum follow up (30 days).
+
+The table below summarises patient diagnoses in the PRULO registry.
+
+Table 4: Summary of diagnoses by ICD-10 code
+
+```{r}
+
+TableData <- Mastersheet2 |>
+  mutate(
+    ICD10 = stringr::str_extract(DiagnosisPrimary,"^[A-Za-z]+[0-9.]+")
+  ) |> count(ICD10, sort = TRUE) |>
+  slice_head(n = 5) |> gt::gt(
+             caption = "Table 4: Summary of Sample Diagnoses by ICD-10"
+             )
+
+knitr::knit_print(TableData)
+
+
+```
+
+## Record \[14\] Patient and record characteristics
+
+Patient characteristics for cases receiving the anchor of interest are summarised in Table 5.
+
+Table 5: Summary of patient characteristics
+
+```{r}
+
+## Slice inputs for columns and rows
+#| label: table-cc
+#| include: false
+#| code-summary: "line up input frames"
+#| warning: false
+
+PatientChar <- Mastersheet2 |>
+ dplyr::select(
+    AgeAtTreatment, 
+    Sex2, 
+    IndexSide,
+    #Surgeon2,
+    #BMI,
+    BilateralStatus,
+    WaitTime,
+    AccountType2
+    ) |>
+  tbl_summary(
+    label = list(
+    AgeAtTreatment ~ "Age at Surgery",
+    #Surgeon2 ~ "Surgeon",
+    #BMI ~ "Body Mass Index",
+    BilateralStatus ~ "Bilateral",
+    Sex2 ~ "Female",
+    WaitTime ~ "Exam to surgery delay (weeks)",
+    IndexSide ~ "Non-dominant",
+    AccountType2 ~ "Insurance Type"
+    ),
+    type = list(
+    Sex2 ~ "dichotomous",
+    IndexSide ~ "dichotomous"),
+    value = list(
+      Sex2 ~ "Female",
+      IndexSide ~ "Non-dominant"),
+    statistic = list(
+      AgeAtTreatment ~ "{mean} ({sd})",
+      #BMI ~ "{mean} ({sd})",
+      WaitTime ~ "{mean} ({sd})",
+      all_categorical() ~ "{p}% ({n})"),
+    missing = "no") |>
+  add_n() |>
+  add_ci(statistic = list(all_categorical() ~ "{conf.low} - {conf.high}",
+                          all_continuous() ~ "{conf.low} - {conf.high}")) |>
+   add_stat_label(
+    location = "row"
+  ) |> modify_table_styling(
+      columns = label,
+      rows = label == "DVA",
+      footnote = "DVA = Department of Veterans Affairs"
+    ) |> modify_table_styling(
+      columns = label,
+      rows = label == "TAC",
+      footnote = "TAC = Transport Accident Commission"
+    )
+
+knitr::knit_print(PatientChar)
+
+```
+
+### Record \[14.1\] Pathology characteristics
+
+Pathology characteristics for cases receiving the anchor of interest are summarised in Table 6.
+
+Table 6: Summary of pathology characteristics
+
+```{r}
+
+## Slice inputs for columns and rows
+#| label: align inputs
+#| include: false
+#| code-summary: "line up input frames"
+#| warning: false
+
+PathChar <- Mastersheet2 |>
+  dplyr::select(
+    TreatmentType,
+    CuffStatus,
+    CuffCondition,
+    CuffTearRetraction,
+    CuffTendonDelaminated,
+    TendonsInvolved,
+    CuffTearSizeAP, 
+    CuffTearSizeML,
+    TearArea, 
+    TearClass, 
+    CuffTearPattern,
+    OtherShoulderPathology
+    ) |>
+  tbl_summary(
+    label = list(
+     TreatmentType ~ "Primary Presentation",
+     CuffStatus ~ "Full Tear",
+     CuffCondition ~ "Fatty Infiltration",
+     CuffTearRetraction ~ "Tendon Retraction",
+     CuffTendonDelaminated ~ "Tendon Delamination",
+     TendonsInvolved ~ "Tendons Involved (+Supraspinatus)",
+     CuffTearSizeAP ~ "Tear Size AP (mm)", 
+     CuffTearSizeML ~ "Tear Size ML (mm)",
+     TearArea  ~ "Tear Area (mm^2)", 
+     TearClass ~ "Tear Classification", 
+     CuffTearPattern  ~ "Tear Pattern",
+     OtherShoulderPathology  ~ "Other Pathology"
+    ),
+    statistic = list(
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{p} ({n})"
+    ),
+    type = list(
+     TreatmentType ~ "dichotomous",
+     CuffStatus ~ "dichotomous",
+     OtherShoulderPathology ~ "dichotomous"
+     ),
+    value = list(
+      TreatmentType ~ "Primary",
+      CuffStatus ~ "Full Tear",
+      OtherShoulderPathology ~ "Yes"
+    ),
+    missing = "no"
+  ) |>
+  add_n() |>
+  add_ci(statistic = list(
+        all_categorical() ~ "{conf.low} - {conf.high}", 
+        all_continuous() ~ "{conf.low} - {conf.high}")
+  ) |> modify_header(
+  label = "Characteristic",
+  n = "Available\n Sample",
+  stat_0 = "Summary\n Statistic",
+  ci_stat_0 = "95% CI"
+) |> add_stat_label(
+    location = "row"
+  ) |> modify_table_styling(
+      columns = label,
+      rows = var_label == "Fatty Infiltration",
+      footnote = "Fuchs et al 1999"
+    ) |> modify_table_styling(
+      columns = label,
+      rows = var_label == "Tendon Retraction",
+      footnote = "Modified Patte Grading (Lädermann et al., 2016)"
+    ) |> modify_table_styling(
+      columns = label,
+      rows = var_label == "Tear Classification",
+      footnote = "(Rashid et al., 2017)"
+    )
+
+knitr::knit_print(PathChar)
+
+```
+
+### Record \[14.2\] Management summary
+
+Surgical details are summarised in Table 7.
+
+Table 7: Summary of management and surgical details
+
+```{r}
+
+## Slice inputs for columns and rows
+#| label: align inputs
+#| include: false
+#| code-summary: "line up input frames"
+#| warning: false
+
+ManageSum <- Mastersheet2 |>
+  dplyr::select(
+    ArthroscopicApproach,
+    PatientPosition,
+    CuffTendonsTreated,
+    RepairType,
+    AnchorFixation,
+    RepairAugment2,
+    CuffRepairTension,
+    CuffRepairQuality
+    ) |>
+  tbl_summary(
+    label = list(
+     ArthroscopicApproach ~ "Arthroscopy",
+     PatientPosition ~ "Beachchair Position",
+     CuffTendonsTreated ~ "Supraspinatus (isolated) Repair",
+     RepairType ~ "Double Row Repair",
+     AnchorFixation ~ "Knotted Anchor Fixation",
+     RepairAugment2 ~ "Superior Capsular Augment",
+     CuffRepairTension ~ "Low Repair Tension",
+     CuffRepairQuality ~ "Anatomic Repair"
+    ),
+    statistic = list(
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{p} ({n})"
+    ),
+    type = list(
+     ArthroscopicApproach ~ "dichotomous",
+     PatientPosition ~ "dichotomous",
+     CuffTendonsTreated ~ "dichotomous",
+     RepairType ~ "dichotomous",
+     AnchorFixation ~ "dichotomous",
+     RepairAugment2 ~ "dichotomous",
+     CuffRepairTension ~ "dichotomous",
+     CuffRepairQuality ~ "dichotomous"
+     ),
+    value = list(
+      ArthroscopicApproach ~ "Yes",
+      PatientPosition ~ "Beachchair",
+      CuffTendonsTreated ~ "None",
+      RepairType ~ "Double",
+      AnchorFixation ~ "Knot",
+      RepairAugment2 ~ "Other",
+      CuffRepairTension ~ "Low",
+      CuffRepairQuality ~ "Anatomic"
+    ),
+    missing = "no"
+  ) |>
+  add_n() |>
+  add_ci(statistic = list(
+        all_categorical() ~ "{conf.low} - {conf.high}", 
+        all_continuous() ~ "{conf.low} - {conf.high}")
+  ) |> 
+  add_stat_label(location = "row") |>
+  modify_header(
+  label = "**Characteristic**",
+  n = "**Available\n Sample**",
+  stat_0 = "**Summary\n Statistic**",
+  ci_stat_0 = "**95% CI**"
+)
+
+knitr::knit_print(ManageSum)
+```
+
+### Record \[14.3\] Follow up
+
+The sample overall had a mean follow up of `{r} mean(Mastersheet2$TreatDuration)` months.
+
+Table 8: Summary of case followup (months) for the sample included for analysis
+
+```{r}
+
+## Slice inputs for columns and rows
+#| label: align inputs
+#| include: false
+#| code-summary: "line up input frames"
+#| warning: false
+
+FollowupTab <- Mastersheet2 |>
+  dplyr::select(
+    TreatDuration,
+    TreatmentStatus
+    ) |>
+  tbl_summary(
+    by = TreatmentStatus,
+    statistic = list(all_continuous() ~ "{mean} ({sd})")
+  ) 
+
+knitr::knit_print(FollowupTab)
+```
+
+```{r Follow up summary}
+
+## Summarise follow up duration
+#| label: Follow up summary
+#| include: false
+#| code-summary: "Summarise follow up duration in figure"
+#| warning: false
+#| fig-cap: Figure 3 - Summary of follow up duration
+
+FollowupSum <- Mastersheet2 |>
+ggplot(aes(y = TreatmentStatus2, x = TreatDuration)) +
+  stat_slab(aes(thickness = after_stat(pdf*n)), scale = 0.7) +
+  stat_dotsinterval(side = "bottom", scale = 0.7, slab_linewidth = NA) +
+  scale_fill_brewer(palette = "Set2") +
+  ggtitle('Follow up duration by treatment status')
+
+knitr::knit_print(FollowupSum)
+```
+
+Figure 3: Summary of follow up duration for the included sample.
+
+## Record \[15\] Outcomes
+
+### Record \[15.3\] Adverse events and complications
+
+```{r}
+# Calculate proportion
+
+ComplicInc <- prop.test(length(unique(ComplicTable3$TreatmentUID)),nrow(Mastersheet2), conf.level = 0.95)
+```
+
+```{epoxy}
+
+Of the {nrow(Mastersheet2)} cases included in the analysis, there were {length(unique(ComplicTable3$TreatmentUID))} treatments observed with {nrow(ComplicTable3)} adverse events of any kind, equating to an incidence of {round(ComplicInc$estimate[1],3)*100} (95%CI, {round(ComplicInc$conf.int[1],3)*100} - {round(ComplicInc$conf.int[2],3)*100}). There were {nrow(ComplicTable3 %>% filter(`Reoperation Procedure` == "Yes"))} reoperations and {nrow(ComplicTable3 %>% filter(Intraop == "Yes"))} events observed intraoperatively.  
+
+```
+
+A summary of the adverse events observed is included in Table 10.
+
+Table 10: Summary of adverse events
+
+```{r}
+
+## Slice inputs for columns and rows
+
+ComplicSum <- ComplicTable3 %>%
+  dplyr::select(
+    #Intraop,
+    Strata,
+    #OccurDelay,
+    #`Reoperation Procedure`,
+    #ReopDelay,
+    GradeFelsch2021
+    ) %>%
+  tbl_summary(
+    label = list(
+    #Intraop ~ "Intraoperative",
+    Strata ~ "Complication Nature",
+    #OccurDelay ~ "Occurrence Delay (Days)",
+    #`Reoperation Procedure` ~ "Reoperation",
+    #ReopDelay ~ "Reoperation Delay (Weeks)",
+    GradeFelsch2021 ~ "Severity Grade"
+    ),
+    statistic = list(
+      #all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{p} ({n})"
+    ),
+    #type = list(
+     #Intraop ~ "dichotomous"
+     #`Reoperation Procedure` ~ "dichotomous"
+     #),
+    #value = list(
+      #Intraop ~ "Yes"
+     #`Reoperation Procedure` ~ "Yes"
+    #),
+    missing = "no"
+  ) %>%
+  add_n() %>%
+  add_stat_label(location = "row") %>%
+  modify_header(
+  label = "Characteristic",
+  n = "Available\n Sample",
+  stat_0 = "Summary\n Statistic"
+  #ci_stat_0 = "95% CI"
+)
+
+ # add_ci(statistic = list(
+ #        all_categorical() ~ "{conf.low} - {conf.high}",
+ #        all_continuous() ~ "{conf.low} - {conf.high}"
+ #        )
+ #  ) %>% 
+
+knitr::knit_print(ComplicSum)
+```
+
+### Record \[15.4\] Patient-reported outcome measures
+
+The QuickDASH total score and WORC Normalised Index, as well as Question 3 of the Physical sub-scale of the WORC were visualised using the *ggdist* (v`{r} utils::packageVersion("ggdist")`) [@ggdist] and *ggplot2* (v`{r} utils::packageVersion("ggplot2")`) [@ggplot2]packages. Plots were arranged using the *patchwork* package.
+
+```{r}
+
+## Plot PROMs trajectories
+#| label: PROMs complete case analysis
+#| code-summary: "Summary of PROMs trajectories - complete case analysis"
+#| warning: false
+
+CCADASH <- ggplot(data = MasterPROM, mapping = aes(y = QDASH, x = TimePoint)) +
+  stat_slab(aes(thickness = after_stat(pdf*n)), scale = 0.7) +
+  stat_dotsinterval(side = "bottom", scale = 0.7, slab_linewidth = NA) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "QuickDASH",
+    y = "QuickDASH Total Score"
+  )
+
+CCAWORC1 <- ggplot(data = MasterPROMWORC, mapping = aes(y = WORCNorm, x = TimePoint)) +
+ stat_slab(aes(thickness = after_stat(pdf*n)), scale = 0.7) +
+ stat_dotsinterval(side = "bottom", scale = 0.7, slab_linewidth = NA) +
+ scale_fill_brewer(palette = "Set2") +
+ ggtitle('WORC Normalised')
+
+CCAWORC2 <- ggplot(data = MasterPROMWORC, mapping = aes(y = WORCPhysicalQ3, x = TimePoint)) +
+ stat_slab(aes(thickness = after_stat(pdf*n)), scale = 0.7) +
+ stat_dotsinterval(side = "bottom", scale = 0.7, slab_linewidth = NA) +
+ scale_fill_brewer(palette = "Set2") +
+ ggtitle('WORC Physical Q3')
+
+CCADASH + CCAWORC1 / CCAWORC2
+```
+
+Figure 6: Summary of patient reported outcomes trajectories by timepoint
+
+## Record \[16\] Main results
+
+The imputed datasets for QDASH and WORC were modeled with a linear mixed effects model in *lme4* (v`{r} utils::packageVersion("lme4")`) [@lme4]and summarised with *broom.mixed* (v`{r} utils::packageVersion("broom.mixed")`) [@broom.mixed]. Up to a 38.7 point improvement in QuickDASH total score was observed (Table 11), as well as 47.1 and 54 point improvements in WORC Index Normalised and WORC Physical Question3 respectively (Table 12). Distributions of model-predicted results illustrated variability in recovery trajectories within all PROMs measures (Figure 7).
+
+Table 11: Summary of pooled linear model results QDASH
+
+```{r}
+
+
+# Fit the lm model(s)
+# 
+QDASHfitimp <- with(
+  QDASHImputed,
+  exp = lme4::lmer(
+    QDASH ~ factor(TimePoint, ordered = FALSE) + AgeAtTreatment + Sex2 + (1|TreatmentInt)
+  )
+                 )
+
+QDASHfimpsum <- tbl_regression(
+  QDASHfitimp, 
+  tidy_fun = pool_and_tidy_mice, 
+  show_single_row = "Sex2",
+  label = list(
+    Sex2 ~ "Male vs Female",
+    AgeAtTreatment ~ "Age at Surgery",
+    `factor(TimePoint, ordered = FALSE)` ~ "TimePoint"),
+  estimate_fun = function(x) style_number(x, digits = 2),
+  pvalue_fun = function(x) style_pvalue(x, digits = 3))  %>% modify_caption("Table tt: ")
+
+knitr::knit_print(QDASHfimpsum)
+
+
+```
+
+```{r}
+
+
+
+TableQDASHCCA <- tbl_summary(
+  QDASHPROMInput2 %>% dplyr::select(
+    TimePoint,
+    QDASH
+  ),
+  by = TimePoint,
+  label = list(
+    QDASH ~ "QuickDASH"
+  ),
+  statistic = list(all_continuous() ~ "{median} ({p25} - {p75})"),
+  #missing = "ifany"
+    )
+
+as_flex_table(TableQDASHCCA)
+
+```
+
+Table 12: Summary of pooled linear model results WORC
+
+```{r}
+# Fit the lm model(s)
+WORCNormfit <- with(WORCImputed,exp = lmer(WORCNorm ~ factor(TimePoint, ordered = FALSE) + AgeAtTreatment + Sex2 + (1|TreatmentInt)))
+
+WORCNormfitsum <- tbl_regression(WORCNormfit, tidy_fun = pool_and_tidy_mice, show_single_row = "Sex2",
+               label = list(Sex2 ~ "Male vs Female", AgeAtTreatment ~ "Age at Surgery", `factor(TimePoint, ordered = FALSE)` ~ "TimePoint"),
+               estimate_fun = function(x) style_number(x, digits = 2), pvalue_fun = function(x) style_pvalue(x, digits = 3)) 
+
+WORCQ3fit <- with(WORCImputed,exp = lmer(WORCPhysicalQ3 ~ factor(TimePoint, ordered = FALSE) + AgeAtTreatment + Sex2 + (1|TreatmentInt)))
+
+WORCQ3fitsum <- tbl_regression(WORCQ3fit, tidy_fun = pool_and_tidy_mice, show_single_row = "Sex2",
+               label = list(Sex2 ~ "Male vs Female", AgeAtTreatment ~ "Age at Surgery", `factor(TimePoint, ordered = FALSE)` ~ "TimePoint"),
+               estimate_fun = function(x) style_number(x, digits = 2), pvalue_fun = function(x) style_pvalue(x, digits = 3))
+
+WORCfitsum <- tbl_merge(tbls = list(WORCNormfitsum, WORCQ3fitsum),
+                        tab_spanner = c("Normalised Index", "Physical Q3")
+) %>% modify_caption("Table zz: Summary of pooled linear model results WORC")
+
+knitr::knit_print(WORCfitsum)
+```
+
+```{r, Predictions}
+
+QDASHPredict <-  marginaleffects::predictions(QDASHfitimp)
+WORCNormPredict <- marginaleffects::predictions(WORCNormfit)
+WORCQ3Predict <- marginaleffects::predictions(WORCQ3fit)
+
+```
+
+Table 13a: Summary of model-predicted QuickDASH by TimePoint
+
+```{r}
+
+
+TableQDASHImp <- tbl_summary(
+  QDASHPredict %>% dplyr::select(
+    TimePoint,
+    QDASH
+  ),
+  by = TimePoint,
+  label = list(
+    QDASH ~ "QuickDASH"
+  ),
+  statistic = list(all_continuous() ~ "{median} ({p25} - {p75})")
+    )
+
+as_flex_table(TableQDASHImp)
+```
+
+Table 13b: Summary of model-predicted WORC by TimePoint
+
+```{r}
+
+
+TableWORCsum <- tbl_summary(
+  WORCNormPredict %>% dplyr::select(
+    TimePoint,
+    WORCNorm
+  ),
+  by = TimePoint,
+  label = list(
+    WORCNorm ~ "WORC Normalised"
+  ),
+  statistic = list(all_continuous() ~ "{median} ({p25} - {p75})")
+    )
+
+
+TableWORCQ3sum <- tbl_summary(
+  WORCQ3Predict %>% dplyr::select(
+    TimePoint,
+    WORCPhysicalQ3
+  ),
+  by = TimePoint,
+  label = list(
+    WORCPhysicalQ3 ~ "WORC Physical Q3"
+  ),
+  statistic = list(all_continuous() ~ "{median} ({p25} - {p75})")
+    )
+
+WORCfitsum <- tbl_stack(tbls = list(TableWORCsum, TableWORCQ3sum)
+                        )
+
+as_flex_table(WORCfitsum)
+
+```
+
+```{r QDash plot - imputed 2}
+
+QDASHprPlot <- ggplot(data = QDASHPredict, mapping = aes(y = QDASH, x = TimePoint)) + stat_slabinterval(aes(thickness = after_stat(pdf*n)), scale = 0.7) +
+  stat_dotsinterval(side = "bottom", scale = 0.7, slab_linewidth = NA) +
+  scale_fill_brewer(palette = "Set2") +
+  ggtitle('QuickDASH')
+  
+
+  
+WORCNormprPlot <- ggplot(data =  WORCNormPredict, mapping = aes(y = WORCNorm, x = TimePoint)) +
+ stat_slab(aes(thickness = after_stat(pdf*n)), scale = 0.7) +
+ stat_dotsinterval(side = "bottom", scale = 0.7, slab_linewidth = NA) +
+ scale_fill_brewer(palette = "Set2") +
+ ggtitle('WORC Normalised')
+
+
+
+WORCQ3prPlot <- ggplot(data = WORCQ3Predict, mapping = aes(y = WORCPhysicalQ3, x = TimePoint)) +
+ stat_slab(aes(thickness = after_stat(pdf*n)), scale = 0.7) +
+ stat_dotsinterval(side = "bottom", scale = 0.7, slab_linewidth = NA) +
+ scale_fill_brewer(palette = "Set2") +
+ ggtitle('WORC Physical Q3')
+
+
+(QDASHprPlot) +
+  (WORCNormprPlot / WORCQ3prPlot) +
+  plot_layout(ncol = 2)
+
+```
+
+Figure 7: Model predicted PROMs trajectories across time points.
+
+## Record \[17\] Sensitivity analyses
+
+Based on the distribution changes in QDASH and WORC over time, a sensitivity analysis was performed on the model structure using the complete case dataset. A comparison was made between quantile regression using the *quantreg* package (v`{r} utils::packageVersion("quantreg")`) [@quantreg]and an ordinary least squares linear model from the *rstats* package (v`{r} utils::packageVersion("stats")`) [@stats] and a linear mixed effects model with the *lme4* package (v`{r} utils::packageVersion("lme4")`) [@lme4]. Results were tabulated using the *modelsummary* package (v`{r} utils::packageVersion("modelsummary")`) [@modelsummary] as rq models are not supported in *gtsummary*.
+
+Table 13: Comparison of linear model types to assess patient-reported outcomes
+
+```{r}
+
+QDASHfit <- list(
+  "RQ" = rq(
+    QDASH ~ factor(TimePoint, ordered = FALSE) + AgeAtTreatment + Sex2,
+    tau = 0.5,
+    method = "fn",
+    data = QDASHPROMInput2
+                 ),
+  "LM" = lm(
+    QDASH ~ factor(TimePoint, ordered = FALSE) + AgeAtTreatment + Sex2,
+    data = QDASHPROMInput2
+  ),
+  "ME" = lme4::lmer(
+    QDASH ~ factor(TimePoint, ordered = FALSE) + AgeAtTreatment + Sex2 + (1|TreatmentInt),
+    data = QDASHPROMInput2
+    )
+)
+
+SensTablesum <- modelsummary::modelsummary(
+  QDASHfit,
+  statistic = c(
+    "se = {std.error}",
+    "conf.int"),
+  fmt = fmt_decimal(1),
+  output = "gt",
+  coef_rename = coef_rename
+             )
+
+knitr::knit_print(SensTablesum)
+
+```
+
+```{epoxy}
+
+The comparison between models revealed an underestimate of the difference in 12month score to preoperative baseline of {round((60.0 - 52.3),1)} points for the QuickDASH ({round(((60.0 - 52.3)/52.3),3)*100}%) in the mixed effects linear model, compared to the quantile regression (50th percentile).
+
+```
+
+# References
