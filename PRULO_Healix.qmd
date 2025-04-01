@@ -72,6 +72,7 @@ Packages were loaded initially with *pacman* package (v`{r} utils::packageVersio
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
+  "flextable",
   "litedown",
   "grateful",
   "modelsummary",

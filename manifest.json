@@ -1869,6 +1869,82 @@
         "Archs": "x64"
       }
     },
+    "flextable": {
+      "Source": "CRAN",
+      "Repository": "https://cran.csiro.au",
+      "description": {
+        "Type": "Package",
+        "Package": "flextable",
+        "Title": "Functions for Tabular Reporting",
+        "Version": "0.9.7",
+        "Authors@R": "c(\n    person(\"David\", \"Gohel\", , \"david.gohel@ardata.fr\", role = c(\"aut\", \"cre\")),\n    person(\"ArData\", role = \"cph\"),\n    person(\"Clementine\", \"Jager\", role = \"ctb\"),\n    person(\"Eli\", \"Daniels\", role = \"ctb\"),\n    person(\"Panagiotis\", \"Skintzos\", , \"panagiotis.skintzos@ardata.fr\", role = \"aut\"),\n    person(\"Quentin\", \"Fazilleau\", role = \"ctb\"),\n    person(\"Maxim\", \"Nazarov\", role = \"ctb\"),\n    person(\"Titouan\", \"Robert\", role = \"ctb\"),\n    person(\"Michael\", \"Barrowman\", role = \"ctb\"),\n    person(\"Atsushi\", \"Yasumoto\", role = \"ctb\"),\n    person(\"Paul\", \"Julian\", role = \"ctb\"),\n    person(\"Sean\", \"Browning\", role = \"ctb\"),\n    person(\"Rémi\", \"Thériault\", role = \"ctb\",\n           comment = c(ORCID = \"0000-0003-4315-6788\")),\n    person(\"Samuel\", \"Jobert\", role = \"ctb\"),\n    person(\"Keith\", \"Newman\", role = \"ctb\")\n  )",
+        "Description": "Use a grammar for creating and customizing pretty tables.\n    The following formats are supported: 'HTML', 'PDF', 'RTF', 'Microsoft\n    Word', 'Microsoft PowerPoint' and R 'Grid Graphics'.  'R Markdown',\n    'Quarto' and the package 'officer' can be used to produce the result\n    files. The syntax is the same for the user regardless of the type of\n    output to be produced. A set of functions allows the creation,\n    definition of cell arrangement, addition of headers or footers,\n    formatting and definition of cell content with text and or images. The\n    package also offers a set of high-level functions that allow tabular\n    reporting of statistical models and the creation of complex cross\n    tabulations.",
+        "License": "GPL-3",
+        "URL": "https://ardata-fr.github.io/flextable-book/,\nhttps://davidgohel.github.io/flextable/",
+        "BugReports": "https://github.com/davidgohel/flextable/issues",
+        "Imports": "data.table (>= 1.13.0), gdtools (>= 0.4.0), graphics,\ngrDevices, grid, htmltools, knitr, officer (>= 0.6.7), ragg,\nrlang, rmarkdown (>= 2.0), stats, utils, uuid (>= 0.1-4), xml2",
+        "Suggests": "bookdown (>= 0.40), broom, broom.mixed, chromote, cluster,\ncommonmark, doconv (>= 0.3.0), equatags, ggplot2, lme4, magick,\nmgcv, nlme, officedown, pdftools, pkgdown (>= 2.0.0), scales,\nsvglite, tables (>= 0.9.17), testthat (>= 3.0.0), webshot2,\nwithr, xtable",
+        "VignetteBuilder": "knitr",
+        "Config/testthat/edition": "3",
+        "Encoding": "UTF-8",
+        "RoxygenNote": "7.3.2",
+        "NeedsCompilation": "no",
+        "Packaged": "2024-10-27 19:17:30 UTC; davidgohel",
+        "Author": "David Gohel [aut, cre],\n  ArData [cph],\n  Clementine Jager [ctb],\n  Eli Daniels [ctb],\n  Panagiotis Skintzos [aut],\n  Quentin Fazilleau [ctb],\n  Maxim Nazarov [ctb],\n  Titouan Robert [ctb],\n  Michael Barrowman [ctb],\n  Atsushi Yasumoto [ctb],\n  Paul Julian [ctb],\n  Sean Browning [ctb],\n  Rémi Thériault [ctb] (<https://orcid.org/0000-0003-4315-6788>),\n  Samuel Jobert [ctb],\n  Keith Newman [ctb]",
+        "Maintainer": "David Gohel <david.gohel@ardata.fr>",
+        "Repository": "CRAN",
+        "Date/Publication": "2024-10-27 20:10:02 UTC",
+        "Built": "R 4.4.2; ; 2024-11-24 03:22:47 UTC; windows"
+      }
+    },
+    "fontBitstreamVera": {
+      "Source": "CRAN",
+      "Repository": "https://cran.csiro.au",
+      "description": {
+        "Package": "fontBitstreamVera",
+        "Title": "Fonts with 'Bitstream Vera Fonts' License",
+        "Version": "0.1.1",
+        "Authors@R": "c(\n    person(\"Lionel\", \"Henry\", , \"lionel.hry@gmail.com\", c(\"cre\", \"aut\")),\n    person(\"Bitstream\", role = \"cph\"))",
+        "Description": "Provides fonts licensed under the 'Bitstream Vera Fonts'\n    license for the 'fontquiver' package.",
+        "Depends": "R (>= 3.0.0)",
+        "License": "file LICENCE",
+        "Encoding": "UTF-8",
+        "LazyData": "true",
+        "RoxygenNote": "5.0.1",
+        "NeedsCompilation": "no",
+        "Packaged": "2017-01-31 20:03:43 UTC; lionel",
+        "Author": "Lionel Henry [cre, aut],\n  Bitstream [cph]",
+        "Maintainer": "Lionel Henry <lionel.hry@gmail.com>",
+        "License_is_FOSS": "yes",
+        "Repository": "CRAN",
+        "Date/Publication": "2017-02-01 00:53:34",
+        "Built": "R 4.4.0; ; 2024-04-23 00:26:20 UTC; windows"
+      }
+    },
+    "fontLiberation": {
+      "Source": "CRAN",
+      "Repository": "https://cran.csiro.au",
+      "description": {
+        "Package": "fontLiberation",
+        "Title": "Liberation Fonts",
+        "Version": "0.1.0",
+        "Authors@R": "c(\n    person(\"Lionel\", \"Henry\", , \"lionel@rstudio.com\", \"cre\"),\n    person(\"Pravin Satpute\", role = \"aut\"),\n    person(\"Steve Matteson\", role = \"aut\"),\n    person(\"Red Hat, Inc\", role = \"cph\"),\n    person(\"Google Corporation\", role = \"cph\"))",
+        "Description": "A placeholder for the Liberation fontset intended for the\n    `fontquiver` package. This fontset covers the 12 combinations of\n    families (sans, serif, mono) and faces (plain, bold, italic, bold\n    italic) supported in R graphics devices.",
+        "Depends": "R (>= 3.0)",
+        "License": "file LICENSE",
+        "Encoding": "UTF-8",
+        "LazyData": "true",
+        "RoxygenNote": "5.0.1",
+        "NeedsCompilation": "no",
+        "Packaged": "2016-10-14 14:21:59 UTC; lionel",
+        "Author": "Lionel Henry [cre],\n  Pravin Satpute [aut],\n  Steve Matteson [aut],\n  Red Hat, Inc [cph],\n  Google Corporation [cph]",
+        "Maintainer": "Lionel Henry <lionel@rstudio.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2016-10-15 11:24:18",
+        "License_is_FOSS": "yes",
+        "Built": "R 4.4.0; ; 2024-04-23 00:26:19 UTC; windows"
+      }
+    },
     "fontawesome": {
       "Source": "CRAN",
       "Repository": "https://cran.csiro.au",
@@ -1896,6 +1972,32 @@
         "Repository": "CRAN",
         "Date/Publication": "2024-11-16 17:30:02 UTC",
         "Built": "R 4.4.2; ; 2024-11-24 02:24:05 UTC; windows"
+      }
+    },
+    "fontquiver": {
+      "Source": "CRAN",
+      "Repository": "https://cran.csiro.au",
+      "description": {
+        "Package": "fontquiver",
+        "Title": "Set of Installed Fonts",
+        "Version": "0.2.1",
+        "Authors@R": "c(\n    person(\"Lionel\", \"Henry\", , \"lionel@rstudio.com\", c(\"cre\", \"aut\")),\n    person(\"RStudio\", role = \"cph\"),\n    person(\"George Douros\", role = \"cph\", comment = \"Symbola font\"))",
+        "Description": "Provides a set of fonts with permissive licences. This is\n    useful when you want to avoid system fonts to make sure your\n    outputs are reproducible.",
+        "Depends": "R (>= 3.0.0)",
+        "Imports": "fontBitstreamVera (>= 0.1.0), fontLiberation (>= 0.1.0)",
+        "Suggests": "testthat, htmltools",
+        "License": "GPL-3 | file LICENSE",
+        "Encoding": "UTF-8",
+        "LazyData": "true",
+        "RoxygenNote": "5.0.1",
+        "Collate": "'font-getters.R' 'fontset.R' 'fontset-bitstream-vera.R'\n'fontset-dejavu.R' 'fontset-liberation.R' 'fontset-symbola.R'\n'html-dependency.R' 'utils.R'",
+        "NeedsCompilation": "no",
+        "Packaged": "2017-01-31 20:11:24 UTC; lionel",
+        "Author": "Lionel Henry [cre, aut],\n  RStudio [cph],\n  George Douros [cph] (Symbola font)",
+        "Maintainer": "Lionel Henry <lionel@rstudio.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2017-02-01 00:52:56",
+        "Built": "R 4.4.2; ; 2024-11-24 01:25:22 UTC; windows"
       }
     },
     "forcats": {
@@ -2101,6 +2203,35 @@
         "Repository": "CRAN",
         "Date/Publication": "2023-07-20 18:50:08 UTC",
         "Built": "R 4.4.1; ; 2024-10-17 02:48:03 UTC; windows"
+      }
+    },
+    "gdtools": {
+      "Source": "CRAN",
+      "Repository": "https://cran.csiro.au",
+      "description": {
+        "Package": "gdtools",
+        "Title": "Utilities for Graphical Rendering and Fonts Management",
+        "Version": "0.4.2",
+        "Authors@R": "c(\n    person(\"David\", \"Gohel\", , \"david.gohel@ardata.fr\", role = c(\"aut\", \"cre\")),\n    person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", role = \"aut\"),\n    person(\"Lionel\", \"Henry\", , \"lionel@rstudio.com\", role = \"aut\"),\n    person(\"Jeroen\", \"Ooms\", , \"jeroen@berkeley.edu\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Yixuan\", \"Qiu\", role = \"ctb\"),\n    person(\"R Core Team\", role = \"cph\",\n           comment = \"Cairo code from X11 device\"),\n    person(\"ArData\", role = \"cph\"),\n    person(\"RStudio\", role = \"cph\")\n  )",
+        "Description": "Tools are provided to compute metrics of formatted strings\n    and to check the availability of a font.  Another set of functions is\n    provided to support the collection of fonts from 'Google Fonts' in a\n    cache. Their use is simple within 'R Markdown' documents and 'shiny'\n    applications but also with graphic productions generated with the\n    'ggiraph', 'ragg' and 'svglite' packages or with tabular productions\n    from the 'flextable' package.",
+        "License": "GPL-3 | file LICENSE",
+        "URL": "https://davidgohel.github.io/gdtools/",
+        "BugReports": "https://github.com/davidgohel/gdtools/issues",
+        "Depends": "R (>= 4.0.0)",
+        "Imports": "fontquiver (>= 0.2.0), htmltools, Rcpp (>= 0.12.12),\nsystemfonts (>= 1.1.0), tools",
+        "Suggests": "curl, gfonts, methods, testthat",
+        "LinkingTo": "Rcpp",
+        "Encoding": "UTF-8",
+        "RoxygenNote": "7.3.2",
+        "SystemRequirements": "cairo, freetype2, fontconfig",
+        "NeedsCompilation": "yes",
+        "Packaged": "2025-03-21 15:59:32 UTC; davidgohel",
+        "Author": "David Gohel [aut, cre],\n  Hadley Wickham [aut],\n  Lionel Henry [aut],\n  Jeroen Ooms [aut] (<https://orcid.org/0000-0002-4035-0289>),\n  Yixuan Qiu [ctb],\n  R Core Team [cph] (Cairo code from X11 device),\n  ArData [cph],\n  RStudio [cph]",
+        "Maintainer": "David Gohel <david.gohel@ardata.fr>",
+        "Repository": "CRAN",
+        "Date/Publication": "2025-03-27 06:30:02 UTC",
+        "Built": "R 4.4.3; x86_64-w64-mingw32; 2025-03-31 01:37:16 UTC; windows",
+        "Archs": "x64"
       }
     },
     "generics": {
@@ -3897,6 +4028,33 @@
         "Repository": "CRAN",
         "Date/Publication": "2019-06-06 09:51:09 UTC",
         "Built": "R 4.4.0; ; 2024-04-23 00:24:13 UTC; windows"
+      }
+    },
+    "officer": {
+      "Source": "CRAN",
+      "Repository": "https://cran.csiro.au",
+      "description": {
+        "Type": "Package",
+        "Package": "officer",
+        "Title": "Manipulation of Microsoft Word and PowerPoint Documents",
+        "Version": "0.6.8",
+        "Authors@R": "c(\n    person(\"David\", \"Gohel\", , \"david.gohel@ardata.fr\", role = c(\"aut\", \"cre\")),\n    person(\"Stefan\", \"Moog\", , \"moogs@gmx.de\", role = \"aut\"),\n    person(\"Mark\", \"Heckmann\", , \"heckmann.mark@gmail.com\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-0736-7417\")),\n    person(\"ArData\", role = \"cph\"),\n    person(\"Frank\", \"Hangler\", , \"frank@plotandscatter.com\", role = \"ctb\",\n           comment = \"function body_replace_all_text\"),\n    person(\"Liz\", \"Sander\", , \"lsander@civisanalytics.com\", role = \"ctb\",\n           comment = \"several documentation fixes\"),\n    person(\"Anton\", \"Victorson\", , \"anton@victorson.se\", role = \"ctb\",\n           comment = \"fixes xml structures\"),\n    person(\"Jon\", \"Calder\", , \"jonmcalder@gmail.com\", role = \"ctb\",\n           comment = \"update vignettes\"),\n    person(\"John\", \"Harrold\", , \"john.m.harrold@gmail.com\", role = \"ctb\",\n           comment = \"function annotate_base\"),\n    person(\"John\", \"Muschelli\", , \"muschellij2@gmail.com\", role = \"ctb\",\n           comment = \"google doc compatibility\"),\n    person(\"Bill\", \"Denney\", , \"wdenney@humanpredictions.com\", role = \"ctb\",\n           comment = c(ORCID = \"0000-0002-5759-428X\", \"function as.matrix.rpptx\")),\n    person(\"Nikolai\", \"Beck\", , \"beck.nikolai@gmail.com\", role = \"ctb\",\n           comment = \"set speaker notes for .pptx documents\"),\n    person(\"Greg\", \"Leleu\", , \"gregoire.leleu@gmail.com\", role = \"ctb\",\n           comment = \"fields functionality in ppt\"),\n    person(\"Majid\", \"Eismann\", role = \"ctb\"),\n    person(\"Hongyuan\", \"Jia\", , \"hongyuanjia@cqust.edu.cn\", role = \"ctb\",\n           comment = c(ORCID = \"0000-0002-0075-8183\"))\n  )",
+        "Description": "Access and manipulate 'Microsoft Word', 'RTF' and 'Microsoft\n    PowerPoint' documents from R.  The package focuses on tabular and\n    graphical reporting from R; it also provides two functions that let\n    users get document content into data objects. A set of functions lets\n    add and remove images, tables and paragraphs of text in new or\n    existing documents.  The package does not require any installation of\n    Microsoft products to be able to write Microsoft files.",
+        "License": "MIT + file LICENSE",
+        "URL": "https://ardata-fr.github.io/officeverse/,\nhttps://davidgohel.github.io/officer/",
+        "BugReports": "https://github.com/davidgohel/officer/issues",
+        "Imports": "cli, graphics, grDevices, openssl, R6, ragg, stats, utils,\nuuid, xml2 (>= 1.1.0), zip (>= 2.1.0)",
+        "Suggests": "devEMF, doconv (>= 0.3.0), gdtools, ggplot2, knitr, magick,\nrmarkdown, rsvg, testthat, withr",
+        "Encoding": "UTF-8",
+        "RoxygenNote": "7.3.2",
+        "Collate": "'core_properties.R' 'custom_properties.R' 'defunct.R'\n'dev-utils.R' 'docx_add.R' 'docx_comments.R' 'docx_cursor.R'\n'docx_part.R' 'docx_replace.R' 'docx_section.R'\n'docx_settings.R' 'empty_content.R' 'formatting_properties.R'\n'fortify_docx.R' 'fortify_pptx.R' 'knitr_utils.R' 'officer.R'\n'ooxml.R' 'ooxml_block_objects.R' 'ooxml_run_objects.R'\n'openxml_content_type.R' 'openxml_document.R' 'pack_folder.R'\n'ph_location.R' 'post-proc.R' 'ppt_class_dir_collection.R'\n'ppt_classes.R' 'ppt_notes.R' 'ppt_ph_dedupe_layout.R'\n'ppt_ph_manipulate.R' 'ppt_ph_rename_layout.R'\n'ppt_ph_with_methods.R' 'pptx_informations.R'\n'pptx_layout_helper.R' 'pptx_matrix.R' 'utils.R'\n'pptx_slide_manip.R' 'read_docx.R' 'read_docx_styles.R'\n'read_pptx.R' 'read_xlsx.R' 'relationship.R' 'rtf.R'\n'shape_properties.R' 'shorcuts.R'",
+        "NeedsCompilation": "no",
+        "Packaged": "2025-03-23 10:41:00 UTC; davidgohel",
+        "Author": "David Gohel [aut, cre],\n  Stefan Moog [aut],\n  Mark Heckmann [aut] (<https://orcid.org/0000-0002-0736-7417>),\n  ArData [cph],\n  Frank Hangler [ctb] (function body_replace_all_text),\n  Liz Sander [ctb] (several documentation fixes),\n  Anton Victorson [ctb] (fixes xml structures),\n  Jon Calder [ctb] (update vignettes),\n  John Harrold [ctb] (function annotate_base),\n  John Muschelli [ctb] (google doc compatibility),\n  Bill Denney [ctb] (<https://orcid.org/0000-0002-5759-428X>, function\n    as.matrix.rpptx),\n  Nikolai Beck [ctb] (set speaker notes for .pptx documents),\n  Greg Leleu [ctb] (fields functionality in ppt),\n  Majid Eismann [ctb],\n  Hongyuan Jia [ctb] (<https://orcid.org/0000-0002-0075-8183>)",
+        "Maintainer": "David Gohel <david.gohel@ardata.fr>",
+        "Repository": "CRAN",
+        "Date/Publication": "2025-03-23 11:40:02 UTC",
+        "Built": "R 4.4.3; ; 2025-03-31 02:02:57 UTC; windows"
       }
     },
     "openssl": {
@@ -6370,7 +6528,7 @@
       "checksum": "1f6ffbb742e78ba70c789ba9ad535bea"
     },
     "PRULO_Healix.qmd": {
-      "checksum": "7a1e20f8b18520047906e856709633c1"
+      "checksum": "f0a2ed46bfad7c7e740a83b788e3821a"
     },
     "PRULO_Healix_files/figure-html/Follow up summary-1.png": {
       "checksum": "6dda51f2120ea94d6768f58100f2b5f5"
