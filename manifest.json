@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "locale": "en_AU",
+  "platform": "4.4.2",
+  "metadata": {
+    "appmode": "quarto-static",
+    "primary_rmd": "index.qmd",
+    "primary_html": null,
+    "content_category": null,
+    "has_parameters": false
+  },
+  "quarto": {
+    "version": "1.4.549",
+    "engines": ["markdown"]
+  },
+  "packages": null,
+  "files": {
+    ".RData": {
+      "checksum": "e9db4f6fe118903e8e4acfb9b299e047"
+    },
+    ".secrets/7a6077d23f6776ccc63f8f70bc12b214_cscholes@ebma.com.au": {
+      "checksum": "9fbb28d4ef79d982b6cb1a88c3c43af8"
+    },
+    ".secrets/c13dc354db9600c8cd9b2bd868d1bf25_cscholes@ebma.com.au": {
+      "checksum": "c4020aff920769e58e8a544de8a862ee"
+    },
+    "grateful-refs.bib": {
+      "checksum": "4fd0de4e4346b9bc36cb16defbae5617"
+    },
+    "HealixBR references.bib": {
+      "checksum": "248053869a75c805b53f0b37cc43af89"
+    },
+    "index.qmd": {
+      "checksum": "2b0091005864a92a342e1c0e7343cd69"
+    },
+    "LICENSE": {
+      "checksum": "3a3f3cea56febea828890847e3cb11d7"
+    },
+    "PRULO_Healix.html": {
+      "checksum": "1f6ffbb742e78ba70c789ba9ad535bea"
+    },
+    "PRULO_Healix.qmd": {
+      "checksum": "539cc9166a010575b6e9bd25ab50be0e"
+    },
+    "PRULO_Healix_files/figure-html/Follow up summary-1.png": {
+      "checksum": "6dda51f2120ea94d6768f58100f2b5f5"
+    },
+    "PRULO_Healix_files/figure-html/Missingness Plots-1.png": {
+      "checksum": "0658ae606f5bf4ff4e0f7dd179c665b5"
+    },
+    "PRULO_Healix_files/figure-html/Missingness Plots-2.png": {
+      "checksum": "b12c56f1436ea7748080c2ae68295004"
+    },
+    "PRULO_Healix_files/figure-html/QDash plot - imputed 2-1.png": {
+      "checksum": "30c438c47ceb8a264c33d3fa131c523c"
+    },
+    "PRULO_Healix_files/figure-html/unnamed-chunk-28-1.png": {
+      "checksum": "a3682a83aee6c8c61db5ceacbfce16a8"
+    },
+    "PRULO_Healix_files/figure-html/unnamed-chunk-32-1.png": {
+      "checksum": "ab645e44ad91a8185ea250c57d05abf4"
+    },
+    "PRULO_Healix_files/figure-html/unnamed-chunk-32-2.png": {
+      "checksum": "b7bb492b3268bed74d1c6817990f5a4c"
+    },
+    "PRULO_Healix_files/figure-html/unnamed-chunk-34-1.png": {
+      "checksum": "fca4b0d577aa9bc0cba744e83073112c"
+    },
+    "PRULO_Healix_files/figure-html/unnamed-chunk-43-1.png": {
+      "checksum": "501fbd0dc00b49829f24a143da50af3e"
+    },
+    "PRULO_Healix_files/libs/bootstrap/bootstrap-icons.css": {
+      "checksum": "2318f137d201fbf51601fa0faba6bef7"
+    },
+    "PRULO_Healix_files/libs/bootstrap/bootstrap-icons.woff": {
+      "checksum": "1a51dfbe5467607389d603c02a77cd10"
+    },
+    "PRULO_Healix_files/libs/bootstrap/bootstrap.min.css": {
+      "checksum": "6af7fe331e124e9a3628ff5072715d11"
+    },
+    "PRULO_Healix_files/libs/bootstrap/bootstrap.min.js": {
+      "checksum": "e2b09c06f0e714b6144a6788a28e3950"
+    },
+    "PRULO_Healix_files/libs/clipboard/clipboard.min.js": {
+      "checksum": "15f52a1ee547f2bdd46e56747332ca2d"
+    },
+    "PRULO_Healix_files/libs/quarto-html/anchor.min.js": {
+      "checksum": "91bcf6cd1fd88fec3f109811e5fc3546"
+    },
+    "PRULO_Healix_files/libs/quarto-html/popper.min.js": {
+      "checksum": "3a4a291ccf3f1ea0f82b641542fd3827"
+    },
+    "PRULO_Healix_files/libs/quarto-html/quarto-syntax-highlighting.css": {
+      "checksum": "49bff82b9355f257417faaaa77dd1607"
+    },
+    "PRULO_Healix_files/libs/quarto-html/quarto.js": {
+      "checksum": "2ca82ae8ee1e5762d249c6b6c0802e30"
+    },
+    "PRULO_Healix_files/libs/quarto-html/tippy.css": {
+      "checksum": "ebd6f8ce46a677e1a4f5f8a8317109a9"
+    },
+    "PRULO_Healix_files/libs/quarto-html/tippy.umd.min.js": {
+      "checksum": "d828775275749701b48bd9d958814111"
+    },
+    "PRULO_Healix_files/libs/tabwid-1.1.3/tabwid.css": {
+      "checksum": "d437ce2bfe7051efe499172acb799f29"
+    },
+    "PRULO_Healix_files/libs/tabwid-1.1.3/tabwid.js": {
+      "checksum": "cd143f89d17ebc75a4f64885def2b8d4"
+    },
+    "README.md": {
+      "checksum": "c5a75b75f1370d5e1c2a6296db92a393"
+    }
+  },
+  "users": null
+}
