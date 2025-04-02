@@ -1115,7 +1115,7 @@ Not applicable
 
 #### Evaluation
 
-Missingness was assessed with visualisation and table functions in the *naniar* package (v`{r} utils::packageVersion("naniar")`) [@naniar] and compiled into figures using *patchwork* (v`{r} utils::packageVersion("patchwork")`) [@patchwork].
+Missingness was assessed with visualisation and table functions in the *naniar* package and compiled into figures using *patchwork*.
 
 ```{r}
 #| label: fig-missing
@@ -1413,8 +1413,6 @@ plot(QDASHImputed)
 ```
 
 ```{r}
-#| label: fig-WORCstrip
-#| fig-cap: "Stability of imputed variables over iterations for WORC dataset"
 
 WORCPROMInput <- MasterPROM |> left_join(
   dplyr::select(
@@ -1559,6 +1557,10 @@ WORCseq <- mice::make.visitSequence(WORCPROMInput2)
 ```
 
 ```{r}
+#| label: fig-WORCstrip
+#| fig-cap: "Stability of imputed variables over iterations for WORC dataset"
+
+
 WORCImputed <- mice::mice(
   data = WORCPROMInput2,
   m = 10,
