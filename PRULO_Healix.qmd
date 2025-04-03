@@ -18,7 +18,10 @@ format:
     toc: true
     number-sections: true
     code-fold: true
-    
+  docx: 
+    toc: true
+    number-sections: true
+    toc-depth: 2  
 execute: 
   echo: true
   warning: false
@@ -568,11 +571,11 @@ IncludeAny = paste(ImplantTable2$Reference,sep = "|")
 
 ```{r}
 #| label: tbl-implants
+#| tbl-cap: "Summary of SKUs (Reference) used to identify cases of interest from the PRULO registry"
 
 
 ImplantTable2 |> gt(
-  rowname_col = "row",
-  caption = "Summary of SKUs (Reference) used to identify cases of interest from the PRULO registry"
+  rowname_col = "row"
   )
 ```
 
