@@ -2020,7 +2020,7 @@ QDASHfitimp <- with(
   )
                  )
 
-QDASHfimpsum <- gtsummary::tbl_regression(
+TableQDASHfit <- gtsummary::tbl_regression(
   QDASHfitimp, 
   tidy_fun = pool_and_tidy_mice, 
   show_single_row = "Sex2",
@@ -2031,7 +2031,7 @@ QDASHfimpsum <- gtsummary::tbl_regression(
   estimate_fun = function(x) style_number(x, digits = 2),
   pvalue_fun = function(x) style_pvalue(x, digits = 3))
 
-gtsummary::as_flex_table(TableFollowup)
+gtsummary::as_flex_table(TableQDASHfit)
 
 
 ```
@@ -2075,11 +2075,11 @@ WORCQ3fitsum <- tbl_regression(WORCQ3fit, tidy_fun = pool_and_tidy_mice, show_si
                label = list(Sex2 ~ "Male vs Female", AgeAtTreatment ~ "Age at Surgery", `factor(TimePoint, ordered = FALSE)` ~ "TimePoint"),
                estimate_fun = function(x) style_number(x, digits = 2), pvalue_fun = function(x) style_pvalue(x, digits = 3))
 
-WORCfitsum <- tbl_merge(tbls = list(WORCNormfitsum, WORCQ3fitsum),
+TableWORCfit <- tbl_merge(tbls = list(WORCNormfitsum, WORCQ3fitsum),
                         tab_spanner = c("Normalised Index", "Physical Q3")
 )
 
-gtsummary::as_flex_table(WORCfitsum)
+gtsummary::as_flex_table(TableWORCfit)
 ```
 
 ```{r, Predictions}
