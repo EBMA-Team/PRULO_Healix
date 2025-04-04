@@ -11,6 +11,7 @@ date-modified: "2025-Mar-31"
 
 bibliography: HealixBR references.bib
 
+
 editor:
   visual
 format:
@@ -126,7 +127,10 @@ knitr::kable(
   pkgs
 )
 
+
+
 ```
+
 
 The packages drawn on to produce the following report are summarised in @tbl-pkgcite.
 
@@ -216,7 +220,9 @@ Subgroup analysis of a clinical registry embedded into private practice. Observa
 
 Data was retrieved using *googlesheets4* to retrieve live database tables. Source files were specified and stored as global variables to call on in further functions.
 
-```{r, Live Table IDs, echo = FALSE}
+```{r}
+#| label: live-table
+#| echo: false
 
 SheetIDs <- list(
 DbSS = "https://docs.google.com/spreadsheets/d/1zyFuf0Wmij13ELTYNmdi_BprF8hU4QSCPsNZ0EYRXzo/edit",
@@ -306,7 +312,7 @@ specific_snapshot <- get_specific_snapshot("20240331")
 ```
 
 ```{r}
-# You can then use these in your subsequent code:
+
 temp_file1 <- tempfile(fileext = ".xlsx")
 drive_download(
   file = specific_snapshot$snapshot$id,
@@ -393,7 +399,8 @@ SnapshotComb <- SnapshotRC |> dplyr::bind_rows(
 
 An additional export of account data was prepared and imported to the workspace using the *readr* package, as well as *tidyverse* syntax and *stringr*, to categorise text fields.
 
-```{r, echo = FALSE}
+```{r}
+#| echo: false
 
 ## Authenticate for sheets using the same token
 gs4_auth(token = drive_token())
@@ -492,8 +499,8 @@ SurgicalGapFill <- googlesheets4::read_sheet(
 Check that column names are aligned
 
 ```{r}
-#| eval: false
-#| echo: false
+#| include: false
+##| echo: false
 
 SnapshotCols <- colnames(SnapshotComb)
 SurgicalCols <- colnames(SurgicalGapFill)
@@ -574,9 +581,15 @@ IncludeAny = paste(ImplantTable2$Reference,sep = "|")
 #| tbl-cap: "Summary of SKUs (Reference) used to identify cases of interest from the PRULO registry"
 
 
-ImplantTable2 |> gt(
-  rowname_col = "row"
-  )
+# ImplantTable2 |> gt(
+#   rowname_col = "row"
+#   )
+#   
+
+knitr::kable(
+  ImplantTable2
+)
+
 ```
 
 A dataframe was prepared to generate a flow chart of record retrieval, screening and patient follow up within the sample of interest.
@@ -743,7 +756,7 @@ No data linkage was utilised for this analysis.
 
 ::: {#tbl-variables}
 | Category | Variable | Comments | Citation |
-|------------------|-------------------|------------------|------------------|
+|------------------|------------------|------------------|------------------|
 | Patient Characteristics | Insurance Status | Recode from account data to insurance status |  |
 | Pathology | Primary diagnosis | Free text coded using ICD-10 international |  |
 |  | CuffRetraction | Defined as per *modified* Patte grading | [@lädermann2016] |
@@ -1628,9 +1641,9 @@ TableData <- Mastersheet2 |>
   mutate(
     ICD10 = stringr::str_extract(DiagnosisPrimary,"^[A-Za-z]+[0-9.]+")
   ) |> count(ICD10, sort = TRUE) |>
-  slice_head(n = 5) |> gt::gt()
+  slice_head(n = 5)
 
-knitr::knit_print(TableData)
+knitr::kable(TableData)
 
 
 ```
@@ -1641,7 +1654,7 @@ knitr::knit_print(TableData)
 #| label: tbl-characteristics
 #| tbl-cap: "Summary of patient characteristics"
 
-PatientChar <- Mastersheet2 |>
+TablePatientChar <- Mastersheet2 |>
  dplyr::select(
     AgeAtTreatment, 
     Sex2, 
@@ -1690,7 +1703,7 @@ PatientChar <- Mastersheet2 |>
       footnote = "TAC = Transport Accident Commission"
     )
 
-knitr::knit_print(PatientChar)
+gtsummary::as_flex_table(TablePatientChar)
 
 ```
 
@@ -1702,7 +1715,7 @@ Patient characteristics for cases receiving the anchor of interest are summarise
 #| label: tbl-pathology
 #| tbl-cap: "Summary of presenting pathology characteristics"
 
-PathChar <- Mastersheet2 |>
+TablePatientPath <- Mastersheet2 |>
   dplyr::select(
     TreatmentType,
     CuffStatus,
@@ -1773,7 +1786,7 @@ PathChar <- Mastersheet2 |>
       footnote = "(Rashid et al., 2017)"
     )
 
-knitr::knit_print(PathChar)
+gtsummary::as_flex_table(TablePatientPath)
 
 ```
 
@@ -1785,7 +1798,7 @@ Pathology characteristics for cases receiving the anchor of interest are summari
 #| label: tbl-surgery
 #| tbl-cap: "Summary of management and surgical details"
 
-ManageSum <- Mastersheet2 |>
+TableManage <- Mastersheet2 |>
   dplyr::select(
     ArthroscopicApproach,
     PatientPosition,
@@ -1846,7 +1859,7 @@ ManageSum <- Mastersheet2 |>
   ci_stat_0 = "**95% CI**"
 )
 
-knitr::knit_print(ManageSum)
+gtsummary::as_flex_table(TableManage)
 ```
 
 Details of surgical management are summarised in @tbl-surgery.
@@ -1859,7 +1872,7 @@ The sample overall had a mean follow up of `{r} round(mean(Mastersheet2$TreatDur
 #| label: tbl-followup
 #| tbl-cap: "Summary of case follow up (months) at the time of analysis"
 
-FollowupTab <- Mastersheet2 |>
+TableFollowup <- Mastersheet2 |>
   dplyr::select(
     TreatDuration,
     TreatmentStatus
@@ -1869,7 +1882,7 @@ FollowupTab <- Mastersheet2 |>
     statistic = list(all_continuous() ~ "{mean} ({sd})")
   ) 
 
-knitr::knit_print(FollowupTab)
+gtsummary::as_flex_table(TableFollowup)
 ```
 
 ```{r}
@@ -1908,7 +1921,7 @@ Of the {nrow(Mastersheet2)} cases included in the analysis, there were {length(u
 
 ## Slice inputs for columns and rows
 
-ComplicSum <- ComplicTable3 %>%
+TableComplic <- ComplicTable3 %>%
   dplyr::select(
     #Intraop,
     Strata,
@@ -1955,7 +1968,7 @@ ComplicSum <- ComplicTable3 %>%
  #        )
  #  ) %>% 
 
-knitr::knit_print(ComplicSum)
+gtsummary::as_flex_table(TableComplic)
 ```
 
 A summary of the adverse events observed in the same is included in @tbl-complications.
@@ -2007,7 +2020,7 @@ QDASHfitimp <- with(
   )
                  )
 
-QDASHfimpsum <- tbl_regression(
+QDASHfimpsum <- gtsummary::tbl_regression(
   QDASHfitimp, 
   tidy_fun = pool_and_tidy_mice, 
   show_single_row = "Sex2",
@@ -2018,7 +2031,7 @@ QDASHfimpsum <- tbl_regression(
   estimate_fun = function(x) style_number(x, digits = 2),
   pvalue_fun = function(x) style_pvalue(x, digits = 3))
 
-knitr::knit_print(QDASHfimpsum)
+gtsummary::as_flex_table(TableFollowup)
 
 
 ```
@@ -2040,7 +2053,7 @@ TableQDASHCCA <- tbl_summary(
   #missing = "ifany"
     )
 
-as_flex_table(TableQDASHCCA)
+gtsummary::as_flex_table(TableQDASHCCA)
 
 ```
 
@@ -2066,7 +2079,7 @@ WORCfitsum <- tbl_merge(tbls = list(WORCNormfitsum, WORCQ3fitsum),
                         tab_spanner = c("Normalised Index", "Physical Q3")
 )
 
-knitr::knit_print(WORCfitsum)
+gtsummary::as_flex_table(WORCfitsum)
 ```
 
 ```{r, Predictions}
@@ -2094,7 +2107,7 @@ TableQDASHImp <- tbl_summary(
   statistic = list(all_continuous() ~ "{median} ({p25} - {p75})")
     )
 
-as_flex_table(TableQDASHImp)
+gtsummary::as_flex_table(TableQDASHImp)
 ```
 
 ```{r}
@@ -2130,7 +2143,7 @@ TableWORCQ3sum <- tbl_summary(
 WORCfitsum <- tbl_stack(tbls = list(TableWORCsum, TableWORCQ3sum)
                         )
 
-as_flex_table(WORCfitsum)
+gtsummary::as_flex_table(WORCfitsum)
 
 ```
 
@@ -2197,7 +2210,7 @@ SensTablesum <- modelsummary::modelsummary(
     "se = {std.error}",
     "conf.int"),
   fmt = fmt_decimal(1),
-  output = "gt",
+  output = "flextable",
   coef_rename = coef_rename
              )
 
@@ -2207,8 +2220,172 @@ knitr::knit_print(SensTablesum)
 
 ```{epoxy}
 
-The comparison between models revealed an underestimate of the difference in 12month score to preoperative baseline of {round((60.0 - 52.3),1)} points for the QuickDASH ({round(((60.0 - 52.3)/52.3),3)*100}%) in the mixed effects linear model, compared to the quantile regression (50th percentile).
+The comparison between models revealed an underestimate of the difference in 12month score to preoperative baseline of {round((59.8 - 54),1)} points for the QuickDASH ({round(((59.8 - 54)/54),3)*100}%) in the mixed effects linear model, compared to the quantile regression (50th percentile).
 
 ```
+
+```{r}
+#| include: false
+#| label: export-figures
+
+# Create output directory if it doesn't exist
+dir.create("figures_export", showWarnings = FALSE)
+
+# Determine the figure path from knitr options
+knitr_fig_path <- knitr::opts_chunk$get("fig.path")
+if (is.null(knitr_fig_path)) {
+  # Try to guess based on common Quarto defaults
+  possible_paths <- c("figure-html/", "_files/figure-html/", "figures/")
+  for (path in possible_paths) {
+    if (dir.exists(path)) {
+      knitr_fig_path <- path
+      break
+    }
+  }
+}
+
+# If we found a path, process the figures
+if (!is.null(knitr_fig_path)) {
+  cat("Looking for figures in:", knitr_fig_path, "\n")
+  
+  # List all image files in the figure directory
+  fig_patterns <- "\\.(png|jpg|jpeg|pdf|svg)$"
+  fig_files <- list.files(path = knitr_fig_path, 
+                         pattern = fig_patterns, 
+                         full.names = TRUE,
+                         recursive = TRUE)
+  
+  # Display what we found
+  cat("Found", length(fig_files), "figure files\n")
+  
+  # Copy each figure to the export directory
+  if (length(fig_files) > 0) {
+    for (fig_file in fig_files) {
+      # Extract just the filename
+      fig_basename <- basename(fig_file)
+      
+      # Copy to export directory
+      file.copy(fig_file, 
+                file.path("figures_export", fig_basename), 
+                overwrite = TRUE)
+      
+      cat("Exported:", fig_basename, "\n")
+    }
+  } else {
+    cat("No figures found in", knitr_fig_path, "\n")
+  }
+} else {
+  cat("Could not determine figure directory path\n")
+}
+
+# Export any ggplot objects from the environment
+plot_objects <- ls(envir = .GlobalEnv)[sapply(ls(envir = .GlobalEnv), function(x) {
+  obj <- get(x, envir = .GlobalEnv)
+  inherits(obj, "ggplot")
+})]
+
+cat("Found", length(plot_objects), "ggplot objects in workspace\n")
+
+# Export each ggplot object found
+for (plot_name in plot_objects) {
+  plot_obj <- get(plot_name, envir = .GlobalEnv)
+  
+  # Use ggsave for ggplot objects
+  ggsave(
+    filename = file.path("figures_export", paste0(plot_name, ".png")),
+    plot = plot_obj,
+    width = 8,
+    height = 6,
+    dpi = 300
+  )
+  
+  cat("Exported ggplot:", plot_name, "\n")
+}
+
+# Search for consort plots and other special objects
+special_plot_objects <- ls(envir = .GlobalEnv)[sapply(ls(envir = .GlobalEnv), function(x) {
+  obj <- get(x, envir = .GlobalEnv)
+  # Check for consort plot objects
+  inherits(obj, "consort") || 
+  inherits(obj, "grob") || 
+  inherits(obj, "htmlwidget") ||
+  "print" %in% names(attributes(obj))
+})]
+
+cat("Found", length(special_plot_objects), "special plot objects (consort, grob, etc.)\n")
+
+# Handle special plot objects like consort plots
+for (plot_name in special_plot_objects) {
+  plot_obj <- get(plot_name, envir = .GlobalEnv)
+  
+  # Save as PNG
+  png_file <- file.path("figures_export", paste0(plot_name, ".png"))
+  
+  # Use different approaches based on object type
+  png(filename = png_file, width = 1800, height = 1200, res = 200)
+  
+  # Try to plot using the most appropriate method
+  tryCatch({
+    if (inherits(plot_obj, "consort")) {
+      # For consort plots
+      print(plot_obj)
+    } else if (inherits(plot_obj, "grob")) {
+      # For grid graphics objects
+      grid::grid.draw(plot_obj)
+    } else if (inherits(plot_obj, "htmlwidget")) {
+      # For htmlwidgets
+      print(plot_obj)
+    } else {
+      # General approach
+      print(plot_obj)
+    }
+    dev.off()
+    cat("Exported special plot:", plot_name, "\n")
+  }, error = function(e) {
+    dev.off()
+    cat("Error exporting", plot_name, ":", e$message, "\n")
+  })
+}
+
+# Additionally, search through entire project for figure files with specific labels
+quarto_project_dir <- getwd()
+all_files <- list.files(path = quarto_project_dir, 
+                        pattern = "\\.(png|jpg|jpeg|pdf|svg)$", 
+                        full.names = TRUE,
+                        recursive = TRUE)
+
+# Look for specific figure labels, especially the fig-strobe one
+fig_labels <- c("fig-strobe", "fig-PROMsImp")  # Add your important figure labels here
+for (label in fig_labels) {
+  matching_files <- grep(label, all_files, value = TRUE)
+  
+  if (length(matching_files) > 0) {
+    for (file in matching_files) {
+      file.copy(file, 
+                file.path("figures_export", basename(file)), 
+                overwrite = TRUE)
+      cat("Found and exported by label:", basename(file), "\n")
+    }
+  } else {
+    cat("No files found matching label:", label, "\n")
+  }
+}
+
+# Special handling for STROBEPlot if it exists
+if (exists("STROBEPlot", envir = .GlobalEnv)) {
+  tryCatch({
+    # Special handling for consort plots
+    png(file.path("figures_export", "STROBEPlot.png"), 
+        width = 1800, height = 1200, res = 200)
+    print(STROBEPlot)
+    dev.off()
+    cat("Exported STROBEPlot directly\n")
+  }, error = function(e) {
+    cat("Error exporting STROBEPlot:", e$message, "\n")
+  })
+}
+```
+
+
 
 # References
