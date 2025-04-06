@@ -755,7 +755,7 @@ No data linkage was utilised for this analysis.
 
 ::: {#tbl-variables}
 | Category | Variable | Comments | Citation |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | Patient Characteristics | Insurance Status | Recode from account data to insurance status |  |
 | Pathology | Primary diagnosis | Free text coded using ICD-10 international |  |
 |  | CuffRetraction | Defined as per *modified* Patte grading | [@lädermann2016] |
@@ -783,7 +783,7 @@ For a discussion of biases in the context of the clinical registry utilised for 
 
 ::: {#tbl-bias}
 | Bias | Definition | Source | Mitigation |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | Misclassification | Treatment record labelled into incorrect cohort. PROMs package not aligned to clinical presentation | [@benchimol2015] | Clinical notes reviewed by experienced reviewer and matched to ICD10 code by definition. |
 | Confounder | An variable of interest and a target outcome simultaneously influenced by a third variable | [@tennant2020] | PROMs analysis incorporated adjustment for age and sex |
 | Missing data | The absence of a data value where a treatment record is eligible to have a data value collected | [@carroll2020] | Multiple imputation utilised |
