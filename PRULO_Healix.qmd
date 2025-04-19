@@ -549,7 +549,7 @@ The registry has {nrow(SnapshotComb1)} treatment records with the first patient 
 
 #### Record \[6.1\] Sample selection
 
-Identify cases receiving the suture of interest. Cases were identified by SKUs identified from the SKU database maintained as part of implant tracking within the registry. Cases were not restricted by available follow up.
+Identify cases receiving the anchor of interest. Cases were identified by SKUs identified from the SKU database maintained as part of implant tracking within the registry. Cases were not restricted by available follow up.
 
 Inclusion criteria;
 
@@ -594,7 +594,6 @@ knitr::kable(
 A dataframe was prepared to generate a flow chart of record retrieval, screening and patient follow up within the sample of interest.
 
 ```{r}
-
 #| label: Consort-Diagram
 #| code-summary: "CONSORT|STROBE"
 
